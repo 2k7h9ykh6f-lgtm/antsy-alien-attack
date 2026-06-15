@@ -23,3 +23,21 @@ start-input-handler() {
     read -sn1 KEY 2>/dev/null
   done
 }
+
+key-display-name() {
+  local k="$1"
+  case "$k" in
+    ' ')  echo "SPACE";;
+    '')   echo "(none)";;
+    $'\x1b') echo "ESC";;
+    $'\x7f') echo "DEL";;
+    $'\t') echo "TAB";;
+    *)
+      if [[ "$k" =~ ^[a-z]$ ]]; then
+        echo "${k^^}"
+      else
+        echo "$k"
+      fi
+      ;;
+  esac
+}
