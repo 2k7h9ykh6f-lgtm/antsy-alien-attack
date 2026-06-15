@@ -38,26 +38,26 @@ attract-mode() {
          ;;
       1) lol-draw-centered $((SCREEN_HEIGHT / 2 - 1)) "P L A Y E R 1   C O N T R O L S"
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 0)) "-------------------------------"
-         lol-draw-centered $((SCREEN_HEIGHT / 2 + 1)) "W"
+         lol-draw-centered $((SCREEN_HEIGHT / 2 + 1)) "${P1_KEY_UP^^}"
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 2)) "↑"
-         lol-draw-centered $((SCREEN_HEIGHT / 2 + 3)) "A ←   → D"
+         lol-draw-centered $((SCREEN_HEIGHT / 2 + 3)) "${P1_KEY_LEFT^^} ←   → ${P1_KEY_RIGHT^^}"
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 4)) "↓"
-         lol-draw-centered $((SCREEN_HEIGHT / 2 + 5)) "S"
+         lol-draw-centered $((SCREEN_HEIGHT / 2 + 5)) "${P1_KEY_DOWN^^}"
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 6)) ""
-         lol-draw-centered $((SCREEN_HEIGHT / 2 + 7)) "[X] Unleash the lasers"
-         lol-draw-centered $((SCREEN_HEIGHT / 2 + 8)) ""
+         lol-draw-centered $((SCREEN_HEIGHT / 2 + 7)) "[${P1_KEY_FIRE^^}] Unleash the lasers"
+         lol-draw-centered $((SCREEN_HEIGHT / 2 + 8)) "[${P1_KEY_BOMB^^}] Smart bomb    [${P1_KEY_PAUSE^^}] Pause"
          lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] for one player, [2] for two player or [Q] to Quit"
          ;;
       2) lol-draw-centered $((SCREEN_HEIGHT / 2 - 1)) "P L A Y E R 2   C O N T R O L S"
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 0)) "-------------------------------"
-         lol-draw-centered $((SCREEN_HEIGHT / 2 + 1)) "I"
+         lol-draw-centered $((SCREEN_HEIGHT / 2 + 1)) "${P2_KEY_UP^^}"
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 2)) "↑"
-         lol-draw-centered $((SCREEN_HEIGHT / 2 + 3)) "J ←   → L"
+         lol-draw-centered $((SCREEN_HEIGHT / 2 + 3)) "${P2_KEY_LEFT^^} ←   → ${P2_KEY_RIGHT^^}"
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 4)) "↓"
-         lol-draw-centered $((SCREEN_HEIGHT / 2 + 5)) "K"
+         lol-draw-centered $((SCREEN_HEIGHT / 2 + 5)) "${P2_KEY_DOWN^^}"
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 6)) ""
-         lol-draw-centered $((SCREEN_HEIGHT / 2 + 7)) "[,] Unleash the lasers"
-         lol-draw-centered $((SCREEN_HEIGHT / 2 + 8)) ""
+         lol-draw-centered $((SCREEN_HEIGHT / 2 + 7)) "[${P2_KEY_FIRE^^}] Unleash the lasers"
+         lol-draw-centered $((SCREEN_HEIGHT / 2 + 8)) "[${P2_KEY_BOMB^^}] Smart bomb    [${P2_KEY_PAUSE^^}] Pause"
          lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] for one player, [2] for two player or [Q] to Quit"
          ;;
       3) lol-draw-centered $((SCREEN_HEIGHT / 2 -  1)) "P O W E R   U P S"
@@ -150,7 +150,7 @@ attract-mode() {
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 5)) ""
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 6)) "F = Toggle FPS:   ${FPS_TOG}"
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 7)) ""
-         lol-draw-centered $((SCREEN_HEIGHT / 2 + 8)) ""
+         lol-draw-centered $((SCREEN_HEIGHT / 2 + 8)) "C = Configure Controls"
          lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] for one player, [2] for two player or [Q] to Quit"
          ;;
      10) lol-draw-centered $((SCREEN_HEIGHT / 2 - 1)) "C R E D I T S"
@@ -262,6 +262,8 @@ title-loop() {
       sound switch-on
       cfg-save
     fi
+  elif [[ $KEY == 'c' ]]; then
+    controls-mode
   else
     attract-mode
     wave-picture "${TITLE_SCREEN_OFFSET}" "${TITLE_SCREEN[@]}"

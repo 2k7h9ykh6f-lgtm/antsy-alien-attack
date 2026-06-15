@@ -8,6 +8,7 @@ source gfx/sprites.sh
 source code/sfx.sh
 source code/music.sh
 source code/title.sh
+source code/controls.sh
 source code/game.sh
 source code/gameover.sh
 source code/victory.sh

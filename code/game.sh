@@ -250,6 +250,9 @@ reset-game() {
   export P2_LASER_LATENCY=20
   export P1_LAST_KEY=
   export P2_LAST_KEY=
+  export P1_BOMBS=0
+  export P2_BOMBS=0
+  export PAUSED=0
   export P1_SHIELDS=0
   export P2_SHIELDS=0
   export P1_RESPAWN=0
@@ -428,8 +431,11 @@ activate-bonus() {
        esac
        ;;
     2) player-increment-score ${PLAYER} ${BONUS_COLLECT}
-       sound smart-bomb
-       deploy-smartbomb ${PLAYER}
+       sound power-up
+       case ${PLAYER} in
+         1) ((P1_BOMBS++));;
+         2) ((P2_BOMBS++));;
+       esac
        ;;
     3) player-increment-score ${PLAYER} ${BONUS_COLLECT}
        sound shield-up
@@ -1182,127 +1188,166 @@ player-lasers() {
   fi
 }
 
-game-loop() {
-  # Movement
-  if ((P1_FRAME == 0)); then
-    case ${KEY} in
-      # Player 1
-      'q')
-        kill-thread ${GAME_MUSIC_THREAD}
-        teardown
-        ;;
-      'w')
-        ((P1_Y--))
-        # Prevent leaving the top of the screen
-        ((P1_Y < 2)) && P1_Y=2
-        P1_LAST_KEY=${KEY}
-        ;;
-      's')
-        ((P1_Y++))
-        # Prevent leaving the bottom of the screen
-        ((P1_Y > P1_MAX_Y)) && P1_Y=${P1_MAX_Y}
-        P1_LAST_KEY=${KEY}
-        ;;
-      'a')
-        ((P1_X--))
-        # Prevent leaving screen left
-        ((P1_X < 0)) && P1_X=0
-        P1_LAST_KEY=${KEY}
-        ;;
-      'd')
-        ((P1_X++))
-        # Prevent leaving screne right
-        ((P1_X > P1_MAX_X)) && P1_X=${P1_MAX_X}
-        P1_LAST_KEY=${KEY}
-        ;;
-      'x')
-        if ((P1_RECENTLY_FIRED == 0 && P1_DEAD == 0)); then
-          sound player1-laser
-          case ${P1_FIRE_POWER} in
-            1) P1_LASERS+=("$((P1_X + 4)) $((P1_Y - 1))")
-               ((P1_FIRED++))
-               ;;
-            2) P1_LASERS+=("$((P1_X + 3)) $((P1_Y - 1))")
-               P1_LASERS+=("$((P1_X + 5)) $((P1_Y - 1))")
-               ((P1_FIRED+=2))
-               ;;
-            3) P1_LASERS+=("$((P1_X + 2)) $((P1_Y - 1))")
-               P1_LASERS+=("$((P1_X + 4)) $((P1_Y - 1))")
-               P1_LASERS+=("$((P1_X + 6)) $((P1_Y - 1))")
-               ((P1_FIRED+=3))
-               ;;
-          esac
-          ((P1_RECENTLY_FIRED+=P1_LASER_LATENCY))
-        fi
-        P1_LAST_KEY=${KEY}
-        ;;
-    esac
+game-toggle-pause() {
+  if ((PAUSED == 0)); then
+    PAUSED=1
+    draw-centered $((SCREEN_HEIGHT / 2)) "${YLW}${BBLK}" " *** PAUSED *** "
+    render
+  else
+    PAUSED=0
+    # Erase the banner with a same-width run of spaces (draw-centered uses the
+    # string length to position it, so this clears exactly the banner cells).
+    draw-centered $((SCREEN_HEIGHT / 2)) "${WHT}${BBLK}" "                "
+    render
   fi
+}
 
-  if ((P2_FRAME == 0)); then
-    case ${KEY} in
-    # Player 2
-    'i')
-      ((P2_Y--))
-      # Prevent leaving the top of the screen
-      ((P2_Y < 2)) && P2_Y=2
-      P2_LAST_KEY=${KEY}
-      ;;
-    'k')
-      ((P2_Y++))
-      # Prevent leaving the bottom of the screen
-      ((P2_Y > P2_MAX_Y)) && P2_Y=${P2_MAX_Y}
-      P2_LAST_KEY=${KEY}
-      ;;
-    'j')
-      ((P2_X--))
-      # Prevent leaving screen left
-      ((P2_X < 0)) && P2_X=0
-      P2_LAST_KEY=${KEY}
-      ;;
-    'l')
-      ((P2_X++))
-      # Prevent leaving screne right
-      ((P2_X > P2_MAX_X)) && P2_X=${P2_MAX_X}
-      P2_LAST_KEY=${KEY}
-      ;;
-    ',')
-      if ((P2_RECENTLY_FIRED == 0 && P2_DEAD == 0)); then
-        sound player2-laser
-        case ${P2_FIRE_POWER} in
-          1) P2_LASERS+=("$((P2_X + 4)) $((P2_Y - 1))")
-             ((P2_FIRED++))
-             ;;
-          2) P2_LASERS+=("$((P2_X + 3)) $((P2_Y - 1))")
-             P2_LASERS+=("$((P2_X + 5)) $((P2_Y - 1))")
-             ((P2_FIRED+=2))
-             ;;
-          3) P2_LASERS+=("$((P2_X + 2)) $((P2_Y - 1))")
-             P2_LASERS+=("$((P2_X + 4)) $((P2_Y - 1))")
-             P2_LASERS+=("$((P2_X + 6)) $((P2_Y - 1))")
-             ((P2_FIRED+=3))
-             ;;
-        esac
-        ((P2_RECENTLY_FIRED+=P2_LASER_LATENCY))
+game-deploy-bomb() {
+  local PLAYER=${1}
+  case ${PLAYER} in
+    1) if ((P1_BOMBS > 0 && P1_DEAD == 0)); then
+         sound smart-bomb
+         deploy-smartbomb ${P1}
+         ((P1_BOMBS--))
+       fi
+       ;;
+    2) if ((P2_BOMBS > 0 && P2_DEAD == 0)); then
+         sound smart-bomb
+         deploy-smartbomb ${P2}
+         ((P2_BOMBS--))
+       fi
+       ;;
+  esac
+}
+
+game-loop() {
+  # Input handling. A single global ${KEY} carries the most recent press.
+  # ${P*_KEY_*} are the configurable bindings (see cfg/config.sh / controls.sh).
+  if [[ -n ${KEY} ]]; then
+    if [[ ${KEY} == 'q' ]]; then
+      # Quit is hardcoded and handled unconditionally, so it works even while
+      # a player is mid-explosion or the game is paused.
+      kill-thread ${GAME_MUSIC_THREAD}
+      teardown
+    elif [[ ${KEY} == "${P1_KEY_PAUSE}" || ${KEY} == "${P2_KEY_PAUSE}" ]]; then
+      game-toggle-pause
+    elif ((PAUSED == 0)); then
+      # Player 1. Separate if-block from Player 2; duplicate-key rejection in
+      # controls-mode guarantees a single key can never drive both players.
+      if ((P1_FRAME == 0)); then
+        if [[ ${KEY} == "${P1_KEY_UP}" ]]; then
+          ((P1_Y--))
+          # Prevent leaving the top of the screen
+          ((P1_Y < 2)) && P1_Y=2
+          P1_LAST_KEY=${KEY}
+        elif [[ ${KEY} == "${P1_KEY_DOWN}" ]]; then
+          ((P1_Y++))
+          # Prevent leaving the bottom of the screen
+          ((P1_Y > P1_MAX_Y)) && P1_Y=${P1_MAX_Y}
+          P1_LAST_KEY=${KEY}
+        elif [[ ${KEY} == "${P1_KEY_LEFT}" ]]; then
+          ((P1_X--))
+          # Prevent leaving screen left
+          ((P1_X < 0)) && P1_X=0
+          P1_LAST_KEY=${KEY}
+        elif [[ ${KEY} == "${P1_KEY_RIGHT}" ]]; then
+          ((P1_X++))
+          # Prevent leaving screne right
+          ((P1_X > P1_MAX_X)) && P1_X=${P1_MAX_X}
+          P1_LAST_KEY=${KEY}
+        elif [[ ${KEY} == "${P1_KEY_FIRE}" ]]; then
+          if ((P1_RECENTLY_FIRED == 0 && P1_DEAD == 0)); then
+            sound player1-laser
+            case ${P1_FIRE_POWER} in
+              1) P1_LASERS+=("$((P1_X + 4)) $((P1_Y - 1))")
+                 ((P1_FIRED++))
+                 ;;
+              2) P1_LASERS+=("$((P1_X + 3)) $((P1_Y - 1))")
+                 P1_LASERS+=("$((P1_X + 5)) $((P1_Y - 1))")
+                 ((P1_FIRED+=2))
+                 ;;
+              3) P1_LASERS+=("$((P1_X + 2)) $((P1_Y - 1))")
+                 P1_LASERS+=("$((P1_X + 4)) $((P1_Y - 1))")
+                 P1_LASERS+=("$((P1_X + 6)) $((P1_Y - 1))")
+                 ((P1_FIRED+=3))
+                 ;;
+            esac
+            ((P1_RECENTLY_FIRED+=P1_LASER_LATENCY))
+          fi
+          P1_LAST_KEY=${KEY}
+        elif [[ ${KEY} == "${P1_KEY_BOMB}" ]]; then
+          game-deploy-bomb ${P1}
+        fi
       fi
-      P2_LAST_KEY=${KEY}
-      ;;
-    esac
+
+      # Player 2
+      if ((P2_FRAME == 0)); then
+        if [[ ${KEY} == "${P2_KEY_UP}" ]]; then
+          ((P2_Y--))
+          # Prevent leaving the top of the screen
+          ((P2_Y < 2)) && P2_Y=2
+          P2_LAST_KEY=${KEY}
+        elif [[ ${KEY} == "${P2_KEY_DOWN}" ]]; then
+          ((P2_Y++))
+          # Prevent leaving the bottom of the screen
+          ((P2_Y > P2_MAX_Y)) && P2_Y=${P2_MAX_Y}
+          P2_LAST_KEY=${KEY}
+        elif [[ ${KEY} == "${P2_KEY_LEFT}" ]]; then
+          ((P2_X--))
+          # Prevent leaving screen left
+          ((P2_X < 0)) && P2_X=0
+          P2_LAST_KEY=${KEY}
+        elif [[ ${KEY} == "${P2_KEY_RIGHT}" ]]; then
+          ((P2_X++))
+          # Prevent leaving screne right
+          ((P2_X > P2_MAX_X)) && P2_X=${P2_MAX_X}
+          P2_LAST_KEY=${KEY}
+        elif [[ ${KEY} == "${P2_KEY_FIRE}" ]]; then
+          if ((P2_RECENTLY_FIRED == 0 && P2_DEAD == 0)); then
+            sound player2-laser
+            case ${P2_FIRE_POWER} in
+              1) P2_LASERS+=("$((P2_X + 4)) $((P2_Y - 1))")
+                 ((P2_FIRED++))
+                 ;;
+              2) P2_LASERS+=("$((P2_X + 3)) $((P2_Y - 1))")
+                 P2_LASERS+=("$((P2_X + 5)) $((P2_Y - 1))")
+                 ((P2_FIRED+=2))
+                 ;;
+              3) P2_LASERS+=("$((P2_X + 2)) $((P2_Y - 1))")
+                 P2_LASERS+=("$((P2_X + 4)) $((P2_Y - 1))")
+                 P2_LASERS+=("$((P2_X + 6)) $((P2_Y - 1))")
+                 ((P2_FIRED+=3))
+                 ;;
+            esac
+            ((P2_RECENTLY_FIRED+=P2_LASER_LATENCY))
+          fi
+          P2_LAST_KEY=${KEY}
+        elif [[ ${KEY} == "${P2_KEY_BOMB}" ]]; then
+          game-deploy-bomb ${P2}
+        fi
+      fi
+    fi
   fi
   KEY=
 
   # Regulate Player 1 laser fire frequency
-  if [ "${P1_LAST_KEY}" != 'x' ]; then
+  if [ "${P1_LAST_KEY}" != "${P1_KEY_FIRE}" ]; then
     P1_RECENTLY_FIRED=0
   elif ((P1_RECENTLY_FIRED > 0)); then
     ((P1_RECENTLY_FIRED--))
   fi
 
   # Regulate Player 2 laser fire frequency
-  if [ "${P2_LAST_KEY}" != ',' ]; then
+  if [ "${P2_LAST_KEY}" != "${P2_KEY_FIRE}" ]; then
     P2_RECENTLY_FIRED=0
   elif ((P2_RECENTLY_FIRED > 0)); then
     ((P2_RECENTLY_FIRED--))
+  fi
+
+  # While paused freeze all game logic and rendering. Input above is still
+  # processed each tick so the pause key (or quit) continues to work.
+  if ((PAUSED == 1)); then
+    return 0
   fi
 
   if (( (P1_KILLS + P2_KILLS >= LEVEL_UP_KILLS) && BOSS_FIGHT == 0)); then
@@ -1411,14 +1456,16 @@ game-loop() {
     P1_SCORE_PADDED=$(printf "%07d" ${P1_SCORE})
     P2_SCORE_PADDED=$(printf "%07d" ${P2_SCORE})
     HI_SCORE_PADDED=$(printf "%07d" ${HI_SCORE})
+    printf -v P1_BOMBS_HUD "☼x%-3d" "${P1_BOMBS}"
+    printf -v P2_BOMBS_HUD "☼x%-3d" "${P2_BOMBS}"
     P1_LIVES_SYMBOLS=$(repeat "♥" "${P1_LIVES}")"   "
     P2_LIVES_SYMBOLS="   "$(repeat "♥" "${P2_LIVES}")
 
     draw 0 0 "${RED}${BBLK}" "1UP ${P1_SCORE_PADDED}"
     draw-centered 0 "${WHT}${BBLK}" "HISCORE ${HI_SCORE_PADDED}"
     draw-right 0 "${blu}${BBLK}" "${P2_SCORE_PADDED} 2UP"
-    draw 0 "${SCREEN_HEIGHT}" "${RED}${BBLK}" "LIVES ${P1_LIVES_SYMBOLS}"
-    draw-right "${SCREEN_HEIGHT}" "${blu}${BBLK}" "${P2_LIVES_SYMBOLS} LIVES"
+    draw 0 "${SCREEN_HEIGHT}" "${RED}${BBLK}" "LIVES ${P1_LIVES_SYMBOLS}${P1_BOMBS_HUD}"
+    draw-right "${SCREEN_HEIGHT}" "${blu}${BBLK}" "   ${P2_BOMBS_HUD}${P2_LIVES_SYMBOLS} LIVES"
   fi
   render
   update-gfx-timers
