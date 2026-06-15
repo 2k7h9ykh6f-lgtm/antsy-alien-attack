@@ -15,14 +15,8 @@ toggle-status(){
   fi
 }
 
-# Controls rebinding state
-export CONTROLS_STATE='idle'
-export CONTROLS_TARGET=
-export CONTROLS_TARGET_LABEL=
-export CONTROLS_ERROR_MSG=
-
 attract-mode() {
-  if ((TITLE_SCREEN_ATTRACT_COUNT >= TITLE_SCREEN_ATTRACT_MAX)) || ((TITLE_SCREEN_ATTRACT_MODE == 11)); then
+  if ((TITLE_SCREEN_ATTRACT_COUNT >= TITLE_SCREEN_ATTRACT_MAX)); then
     blank-screen
     toggle-status
     P1_SHIELDS=0
@@ -42,28 +36,36 @@ attract-mode() {
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 8)) "Go get 'em!"
          lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] for one player, [2] for two player or [Q] to Quit"
          ;;
-      1) lol-draw-centered $((SCREEN_HEIGHT / 2 - 1)) "P L A Y E R 1   C O N T R O L S"
+      1) local KU KL KD KR KF
+         KU=$(key-name "${P1_KEY_UP}"); KL=$(key-name "${P1_KEY_LEFT}")
+         KD=$(key-name "${P1_KEY_DOWN}"); KR=$(key-name "${P1_KEY_RIGHT}")
+         KF=$(key-name "${P1_KEY_FIRE}")
+         lol-draw-centered $((SCREEN_HEIGHT / 2 - 1)) "P L A Y E R 1   C O N T R O L S"
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 0)) "-------------------------------"
-         lol-draw-centered $((SCREEN_HEIGHT / 2 + 1)) "$(key-display-name "${P1_KEY_UP}")"
+         lol-draw-centered $((SCREEN_HEIGHT / 2 + 1)) "${KU}"
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 2)) "↑"
-         lol-draw-centered $((SCREEN_HEIGHT / 2 + 3)) "$(key-display-name "${P1_KEY_LEFT}") ←   → $(key-display-name "${P1_KEY_RIGHT}")"
+         lol-draw-centered $((SCREEN_HEIGHT / 2 + 3)) "${KL} ←   → ${KR}"
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 4)) "↓"
-         lol-draw-centered $((SCREEN_HEIGHT / 2 + 5)) "$(key-display-name "${P1_KEY_DOWN}")"
+         lol-draw-centered $((SCREEN_HEIGHT / 2 + 5)) "${KD}"
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 6)) ""
-         lol-draw-centered $((SCREEN_HEIGHT / 2 + 7)) "[$(key-display-name "${P1_KEY_FIRE}")] Unleash the lasers"
-         lol-draw-centered $((SCREEN_HEIGHT / 2 + 8)) "[$(key-display-name "${P1_KEY_BOMB}")] Smart Bomb  [$(key-display-name "${P1_KEY_PAUSE}")] Pause"
+         lol-draw-centered $((SCREEN_HEIGHT / 2 + 7)) "[${KF}] Unleash the lasers"
+         lol-draw-centered $((SCREEN_HEIGHT / 2 + 8)) ""
          lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] for one player, [2] for two player or [Q] to Quit"
          ;;
-      2) lol-draw-centered $((SCREEN_HEIGHT / 2 - 1)) "P L A Y E R 2   C O N T R O L S"
+      2) local KU KL KD KR KF
+         KU=$(key-name "${P2_KEY_UP}"); KL=$(key-name "${P2_KEY_LEFT}")
+         KD=$(key-name "${P2_KEY_DOWN}"); KR=$(key-name "${P2_KEY_RIGHT}")
+         KF=$(key-name "${P2_KEY_FIRE}")
+         lol-draw-centered $((SCREEN_HEIGHT / 2 - 1)) "P L A Y E R 2   C O N T R O L S"
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 0)) "-------------------------------"
-         lol-draw-centered $((SCREEN_HEIGHT / 2 + 1)) "$(key-display-name "${P2_KEY_UP}")"
+         lol-draw-centered $((SCREEN_HEIGHT / 2 + 1)) "${KU}"
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 2)) "↑"
-         lol-draw-centered $((SCREEN_HEIGHT / 2 + 3)) "$(key-display-name "${P2_KEY_LEFT}") ←   → $(key-display-name "${P2_KEY_RIGHT}")"
+         lol-draw-centered $((SCREEN_HEIGHT / 2 + 3)) "${KL} ←   → ${KR}"
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 4)) "↓"
-         lol-draw-centered $((SCREEN_HEIGHT / 2 + 5)) "$(key-display-name "${P2_KEY_DOWN}")"
+         lol-draw-centered $((SCREEN_HEIGHT / 2 + 5)) "${KD}"
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 6)) ""
-         lol-draw-centered $((SCREEN_HEIGHT / 2 + 7)) "[$(key-display-name "${P2_KEY_FIRE}")] Unleash the lasers"
-         lol-draw-centered $((SCREEN_HEIGHT / 2 + 8)) "[$(key-display-name "${P2_KEY_BOMB}")] Smart Bomb  [$(key-display-name "${P2_KEY_PAUSE}")] Pause"
+         lol-draw-centered $((SCREEN_HEIGHT / 2 + 7)) "[${KF}] Unleash the lasers"
+         lol-draw-centered $((SCREEN_HEIGHT / 2 + 8)) ""
          lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] for one player, [2] for two player or [Q] to Quit"
          ;;
       3) lol-draw-centered $((SCREEN_HEIGHT / 2 -  1)) "P O W E R   U P S"
@@ -156,7 +158,7 @@ attract-mode() {
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 5)) ""
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 6)) "F = Toggle FPS:   ${FPS_TOG}"
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 7)) ""
-         lol-draw-centered $((SCREEN_HEIGHT / 2 + 8)) "C = Controls"
+         lol-draw-centered $((SCREEN_HEIGHT / 2 + 8)) "C = Configure Controls"
          lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] for one player, [2] for two player or [Q] to Quit"
          ;;
      10) lol-draw-centered $((SCREEN_HEIGHT / 2 - 1)) "C R E D I T S"
@@ -171,143 +173,10 @@ attract-mode() {
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 8)) ""
          lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] for one player, [2] for two player or [Q] to Quit"
          ;;
-     11) lol-draw-centered $((SCREEN_HEIGHT / 2 - 5)) "C O N T R O L S"
-         lol-draw-centered $((SCREEN_HEIGHT / 2 - 4)) "---------------"
-         lol-draw-centered $((SCREEN_HEIGHT / 2 - 2)) "PLAYER 1                    PLAYER 2"
-         raw-draw-centered $((SCREEN_HEIGHT / 2 + 0)) " A. Up     [$(key-display-name "${P1_KEY_UP}")]            H. Up     [$(key-display-name "${P2_KEY_UP}")]"
-         raw-draw-centered $((SCREEN_HEIGHT / 2 + 1)) " B. Down   [$(key-display-name "${P1_KEY_DOWN}")]            I. Down   [$(key-display-name "${P2_KEY_DOWN}")]"
-         raw-draw-centered $((SCREEN_HEIGHT / 2 + 2)) " C. Left   [$(key-display-name "${P1_KEY_LEFT}")]            J. Left   [$(key-display-name "${P2_KEY_LEFT}")]"
-         raw-draw-centered $((SCREEN_HEIGHT / 2 + 3)) " D. Right  [$(key-display-name "${P1_KEY_RIGHT}")]            K. Right  [$(key-display-name "${P2_KEY_RIGHT}")]"
-         raw-draw-centered $((SCREEN_HEIGHT / 2 + 4)) " E. Fire   [$(key-display-name "${P1_KEY_FIRE}")]            L. Fire   [$(key-display-name "${P2_KEY_FIRE}")]"
-         raw-draw-centered $((SCREEN_HEIGHT / 2 + 5)) " F. Bomb   [$(key-display-name "${P1_KEY_BOMB}")]            M. Bomb   [$(key-display-name "${P2_KEY_BOMB}")]"
-         raw-draw-centered $((SCREEN_HEIGHT / 2 + 6)) " G. Pause  [$(key-display-name "${P1_KEY_PAUSE}")]            N. Pause  [$(key-display-name "${P2_KEY_PAUSE}")]"
-         lol-draw-centered $((SCREEN_HEIGHT / 2 + 8)) ""
-         case ${CONTROLS_STATE} in
-           idle)
-             lol-draw-centered $((SCREEN_HEIGHT / 2 + 9)) "[A-N] to rebind  [Q] back"
-             ;;
-           rebinding)
-             lol-draw-centered $((SCREEN_HEIGHT / 2 + 9)) "Press new key for ${CONTROLS_TARGET_LABEL}..."
-             ;;
-           error)
-             raw-draw-centered $((SCREEN_HEIGHT / 2 + 9)) "${RED}${CONTROLS_ERROR_MSG}${DEF}"
-             lol-draw-centered $((SCREEN_HEIGHT / 2 + 10)) "Press any key to try again..."
-             ;;
-         esac
-         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] for one player, [2] for two player or [Q] to Quit"
-         ;;
     esac
-    # Freeze cycling on controls page
-    if ((TITLE_SCREEN_ATTRACT_MODE != 11)); then
-      ((TITLE_SCREEN_ATTRACT_MODE >= TITLE_SCREEN_ATTRACT_MODE_MAX)) && TITLE_SCREEN_ATTRACT_MODE=0 || ((TITLE_SCREEN_ATTRACT_MODE++))
-    fi
+    ((TITLE_SCREEN_ATTRACT_MODE >= TITLE_SCREEN_ATTRACT_MODE_MAX)) && TITLE_SCREEN_ATTRACT_MODE=0 || ((TITLE_SCREEN_ATTRACT_MODE++))
   fi
-  if ((TITLE_SCREEN_ATTRACT_MODE != 11)); then
-    ((TITLE_SCREEN_ATTRACT_COUNT >= TITLE_SCREEN_ATTRACT_MAX)) && TITLE_SCREEN_ATTRACT_COUNT=0 || ((TITLE_SCREEN_ATTRACT_COUNT++))
-  fi
-}
-
-validate-key-binding() {
-  local target_var="$1"
-  local new_key="$2"
-  local target_player="${target_var%%_*}"
-
-  # Rule 1: Must be a printable ASCII character
-  if [[ -z "$new_key" ]] || [[ "$new_key" == $'\x1b' ]] || [[ "$new_key" == $'\t' ]]; then
-    echo "Invalid key"
-    return
-  fi
-
-  # Rule 2: Must not be a reserved global key
-  case "$new_key" in
-    1|2|q)
-      echo "Key [$(key-display-name "$new_key")] is reserved"
-      return
-      ;;
-  esac
-
-  # Rule 3: Must not duplicate another binding for the same player
-  local actions="UP DOWN LEFT RIGHT FIRE BOMB PAUSE"
-  local act existing check_var
-  for act in ${actions}; do
-    check_var="${target_player}_KEY_${act}"
-    if [[ "$check_var" != "$target_var" ]]; then
-      eval "existing=\"\$$check_var\""
-      if [[ "$existing" == "$new_key" ]]; then
-        echo "Already bound to ${target_player} ${act}"
-        return
-      fi
-    fi
-  done
-
-  # Rule 4: Cross-player critical actions must not conflict
-  local other_player target_action crit
-  if [[ "$target_player" == "P1" ]]; then other_player="P2"; else other_player="P1"; fi
-  target_action="${target_var##*_}"
-  case "$target_action" in
-    FIRE|BOMB|PAUSE)
-      for crit in FIRE BOMB PAUSE; do
-        check_var="${other_player}_KEY_${crit}"
-        eval "existing=\"\$$check_var\""
-        if [[ "$existing" == "$new_key" ]]; then
-          echo "Conflicts with ${other_player} ${crit}"
-          return
-        fi
-      done
-      ;;
-  esac
-
-  echo ""
-}
-
-controls-page-handle-key() {
-  case ${CONTROLS_STATE} in
-    idle)
-      case ${KEY} in
-        a|b|c|d|e|f|g|h|i|j|k|l|m|n)
-          local idx player action label
-          case ${KEY} in
-            a) player="P1"; action="UP";    label="P1 UP";    idx=0;;
-            b) player="P1"; action="DOWN";  label="P1 DOWN";  idx=1;;
-            c) player="P1"; action="LEFT";  label="P1 LEFT";  idx=2;;
-            d) player="P1"; action="RIGHT"; label="P1 RIGHT"; idx=3;;
-            e) player="P1"; action="FIRE";  label="P1 FIRE";  idx=4;;
-            f) player="P1"; action="BOMB";  label="P1 BOMB";  idx=5;;
-            g) player="P1"; action="PAUSE"; label="P1 PAUSE"; idx=6;;
-            h) player="P2"; action="UP";    label="P2 UP";    idx=7;;
-            i) player="P2"; action="DOWN";  label="P2 DOWN";  idx=8;;
-            j) player="P2"; action="LEFT";  label="P2 LEFT";  idx=9;;
-            k) player="P2"; action="RIGHT"; label="P2 RIGHT"; idx=10;;
-            l) player="P2"; action="FIRE";  label="P2 FIRE";  idx=11;;
-            m) player="P2"; action="BOMB";  label="P2 BOMB";  idx=12;;
-            n) player="P2"; action="PAUSE"; label="P2 PAUSE"; idx=13;;
-          esac
-          CONTROLS_TARGET="${player}_KEY_${action}"
-          CONTROLS_TARGET_LABEL="$label"
-          CONTROLS_STATE='rebinding'
-          ;;
-      esac
-      KEY=
-      ;;
-    rebinding)
-      local err
-      err=$(validate-key-binding "$CONTROLS_TARGET" "$KEY")
-      if [[ -n "$err" ]]; then
-        CONTROLS_ERROR_MSG="$err"
-        CONTROLS_STATE='error'
-      else
-        eval "${CONTROLS_TARGET}=\"\${KEY}\""
-        cfg-save
-        CONTROLS_STATE='idle'
-      fi
-      KEY=
-      ;;
-    error)
-      CONTROLS_STATE='rebinding'
-      CONTROLS_ERROR_MSG=
-      KEY=
-      ;;
-  esac
+  ((TITLE_SCREEN_ATTRACT_COUNT >= TITLE_SCREEN_ATTRACT_MAX)) && TITLE_SCREEN_ATTRACT_COUNT=0 || ((TITLE_SCREEN_ATTRACT_COUNT++))
 }
 
 title-mode() {
@@ -319,11 +188,7 @@ title-mode() {
   export TITLE_SCREEN_ATTRACT_MAX=500
   export TITLE_SCREEN_ATTRACT_COUNT=500
   export TITLE_SCREEN_ATTRACT_MODE=0
-  export TITLE_SCREEN_ATTRACT_MODE_MAX=11
-  export CONTROLS_STATE='idle'
-  export CONTROLS_TARGET=
-  export CONTROLS_TARGET_LABEL=
-  export CONTROLS_ERROR_MSG=
+  export TITLE_SCREEN_ATTRACT_MODE_MAX=10
 
   reset-timers
   music title
@@ -343,12 +208,6 @@ title-loop() {
   elif [[ $KEY == 'q' ]]; then
     kill-thread ${TITLE_MUSIC_THREAD}
     teardown
-  elif ((TITLE_SCREEN_ATTRACT_MODE == 11)); then
-    if [[ -n ${KEY} ]]; then
-      controls-page-handle-key
-    fi
-    attract-mode
-    render
   elif [[ $KEY == 'm' ]]; then
     if ((MUSIC_ENABLED == 1)); then
       MUSIC_ENABLED=0
@@ -412,11 +271,7 @@ title-loop() {
       cfg-save
     fi
   elif [[ $KEY == 'c' ]]; then
-    TITLE_SCREEN_ATTRACT_MODE=11
-    TITLE_SCREEN_ATTRACT_COUNT=0
-    CONTROLS_STATE='idle'
-    CONTROLS_ERROR_MSG=
-    sound switch-on
+    controls-menu
   else
     attract-mode
     wave-picture "${TITLE_SCREEN_OFFSET}" "${TITLE_SCREEN[@]}"
@@ -428,6 +283,135 @@ title-loop() {
     compose-sprites
     draw-sprite-unmasked ${P1_X} ${P1_Y} "${P1_SPRITE[@]}"
     draw-sprite-unmasked ${P2_X} ${P2_Y} "${P2_SPRITE[@]}"
+    render
+  fi
+  KEY=
+}
+
+# ---------- Controls submenu ----------
+
+# Human-readable labels for each binding slot (parallel to KEY_BINDING_NAMES)
+readonly CTRL_LABELS=(
+  "P1 Up" "P1 Down" "P1 Left" "P1 Right" "P1 Fire" "P1 Bomb" "P1 Pause"
+  "P2 Up" "P2 Down" "P2 Left" "P2 Right" "P2 Fire" "P2 Bomb" "P2 Pause"
+)
+
+controls-menu() {
+  blank-screen
+  local MID=$((SCREEN_HEIGHT / 2))
+  local P1_COL=$((SCREEN_WIDTH / 6))
+  local P2_COL=$((SCREEN_WIDTH / 2 + SCREEN_WIDTH / 8))
+  local I VAL LABEL
+
+  lol-draw-centered $((MID - 6)) "C O N T R O L S"
+  lol-draw-centered $((MID - 5)) "---------------"
+
+  draw ${P1_COL} $((MID - 4)) "${WHT}${BBLK}" "PLAYER 1"
+  draw ${P2_COL} $((MID - 4)) "${WHT}${BBLK}" "PLAYER 2"
+
+  for I in "${!KEY_BINDING_NAMES[@]}"; do
+    eval "VAL=\${${KEY_BINDING_NAMES[$I]}}"
+    LABEL="${CTRL_LABELS[$I]}"
+    local KN
+    KN=$(key-name "${VAL}")
+    if ((I < 7)); then
+      # P1 column (left)
+      draw ${P1_COL} $((MID - 2 + I)) "${WHT}${BBLK}" "[$((I+1))] ${LABEL}: ${KN}"
+    else
+      # P2 column (right)
+      draw ${P2_COL} $((MID - 2 + I - 7)) "${WHT}${BBLK}" "[$((I+1))] ${LABEL}: ${KN}"
+    fi
+  done
+
+  local FOOTER_Y=$((MID + 7))
+  lol-draw-centered ${FOOTER_Y}     "Select [1]-[9],[0],[A]-[D] to rebind a key"
+  lol-draw-centered $((FOOTER_Y+2)) "[R] Reset to defaults    [ESC] Back"
+  render
+  export LOOP=controls-loop
+}
+
+controls-loop() {
+  local ACTION_INDEX=
+
+  case "${KEY}" in
+    '1') ACTION_INDEX=0 ;;
+    '2') ACTION_INDEX=1 ;;
+    '3') ACTION_INDEX=2 ;;
+    '4') ACTION_INDEX=3 ;;
+    '5') ACTION_INDEX=4 ;;
+    '6') ACTION_INDEX=5 ;;
+    '7') ACTION_INDEX=6 ;;
+    '8') ACTION_INDEX=7 ;;
+    '9') ACTION_INDEX=8 ;;
+    '0') ACTION_INDEX=9 ;;
+    'A'|'a') ACTION_INDEX=10 ;;
+    'B'|'b') ACTION_INDEX=11 ;;
+    'C'|'c') ACTION_INDEX=12 ;;  # Note: lowercase c would normally be reserved, but we are in controls context
+    'D'|'d') ACTION_INDEX=13 ;;
+    'r'|'R')
+      reset-key-bindings
+      cfg-save
+      controls-menu
+      KEY=
+      return
+      ;;
+    $'\x1b')
+      # Return to title
+      export LOOP=title-loop
+      KEY=
+      return
+      ;;
+    *)
+      KEY=
+      return
+      ;;
+  esac
+
+  if [[ -n "${ACTION_INDEX}" ]] && ((ACTION_INDEX >= 0 && ACTION_INDEX < ${#KEY_BINDING_NAMES[@]})); then
+    export REBIND_INDEX=${ACTION_INDEX}
+    export REBIND_VAR="${KEY_BINDING_NAMES[$ACTION_INDEX]}"
+    export REBIND_LABEL="${CTRL_LABELS[$ACTION_INDEX]}"
+    controls-rebind-prompt
+  fi
+  KEY=
+}
+
+controls-rebind-prompt() {
+  local MID=$((SCREEN_HEIGHT / 2))
+  # Clear footer area and show prompt
+  local Y=$((MID + 9))
+  local BLANK_LINE
+  BLANK_LINE=$(repeat " " "${SCREEN_WIDTH}")
+  draw 0 ${Y} "${SPC}" "${BLANK_LINE}"
+  draw 0 $((Y+1)) "${SPC}" "${BLANK_LINE}"
+  lol-draw-centered ${Y} "Press new key for: ${REBIND_LABEL}"
+  lol-draw-centered $((Y+1)) "(ESC to cancel)"
+  render
+  export LOOP=controls-rebind-loop
+}
+
+controls-rebind-loop() {
+  # ESC cancels
+  if [[ "${KEY}" == $'\x1b' ]]; then
+    controls-menu
+    KEY=
+    return
+  fi
+
+  local PROPOSED="${KEY}"
+  if check-key-conflict "${PROPOSED}" "${REBIND_VAR}"; then
+    # Valid key — apply it
+    eval "${REBIND_VAR}='${PROPOSED}'"
+    cfg-save
+    controls-menu
+  else
+    # Show error and stay in rebind mode
+    local MID=$((SCREEN_HEIGHT / 2))
+    local Y=$((MID + 11))
+    local BLANK_LINE
+    BLANK_LINE=$(repeat " " "${SCREEN_WIDTH}")
+    draw 0 ${Y} "${SPC}" "${BLANK_LINE}"
+    draw 0 ${Y} "${RED}${BBLK}" "  ${CONFLICT_REASON} — try again or ESC to cancel  "
     render
   fi
   KEY=

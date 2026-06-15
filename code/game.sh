@@ -250,12 +250,10 @@ reset-game() {
   export P2_LASER_LATENCY=20
   export P1_LAST_KEY=
   export P2_LAST_KEY=
+  export P1_BOMBS=0
+  export P2_BOMBS=0
   export P1_SHIELDS=0
   export P2_SHIELDS=0
-  export P1_BOMBS=1
-  export P2_BOMBS=1
-  export BOMB_MAX=3
-  export GAME_PAUSED=0
   export P1_RESPAWN=0
   export P2_RESPAWN=0
   export P1_FRAME=0
@@ -434,18 +432,8 @@ activate-bonus() {
     2) player-increment-score ${PLAYER} ${BONUS_COLLECT}
        sound smart-bomb
        case ${PLAYER} in
-         1) if ((P1_BOMBS < BOMB_MAX)); then
-              ((P1_BOMBS++))
-            else
-              deploy-smartbomb ${PLAYER}
-            fi
-            ;;
-         2) if ((P2_BOMBS < BOMB_MAX)); then
-              ((P2_BOMBS++))
-            else
-              deploy-smartbomb ${PLAYER}
-            fi
-            ;;
+         1) ((P1_BOMBS++));;
+         2) ((P2_BOMBS++));;
        esac
        ;;
     3) player-increment-score ${PLAYER} ${BONUS_COLLECT}
@@ -1200,103 +1188,110 @@ player-lasers() {
 }
 
 game-loop() {
-  if [[ ${KEY} == 'q' ]]; then
-    kill-thread ${GAME_MUSIC_THREAD}
-    teardown
-    KEY=
-    return
-  fi
-  if [[ ${KEY} == ${P1_KEY_PAUSE} ]] || [[ ${KEY} == ${P2_KEY_PAUSE} ]]; then
-    if ((GAME_PAUSED == 0)); then
-      GAME_PAUSED=1
-    else
-      GAME_PAUSED=0
-    fi
-    KEY=
-    return
-  fi
-  if ((GAME_PAUSED == 1)); then
+  # Pause check (either player)
+  if [[ "${KEY}" == "${P1_KEY_PAUSE}" ]] || [[ "${KEY}" == "${P2_KEY_PAUSE}" ]]; then
+    export GAME_PAUSED=1
+    blank-screen
     lol-draw-centered $((SCREEN_HEIGHT / 2 - 1)) "P A U S E D"
-    lol-draw-centered $((SCREEN_HEIGHT / 2 + 1)) "Press $(key-display-name "${P1_KEY_PAUSE}") to resume"
+    lol-draw-centered $((SCREEN_HEIGHT / 2 + 1)) "Press $(key-name "${P1_KEY_PAUSE}") or $(key-name "${P2_KEY_PAUSE}") to resume"
     render
+    export LOOP=pause-loop
     KEY=
     return
   fi
+
   # Movement
   if ((P1_FRAME == 0)); then
-    # Player 1
-    if [[ ${KEY} == ${P1_KEY_UP} ]]; then
-      ((P1_Y--))
-      # Prevent leaving the top of the screen
-      ((P1_Y < 2)) && P1_Y=2
-      P1_LAST_KEY=${KEY}
-    elif [[ ${KEY} == ${P1_KEY_DOWN} ]]; then
-      ((P1_Y++))
-      # Prevent leaving the bottom of the screen
-      ((P1_Y > P1_MAX_Y)) && P1_Y=${P1_MAX_Y}
-      P1_LAST_KEY=${KEY}
-    elif [[ ${KEY} == ${P1_KEY_LEFT} ]]; then
-      ((P1_X--))
-      # Prevent leaving screen left
-      ((P1_X < 0)) && P1_X=0
-      P1_LAST_KEY=${KEY}
-    elif [[ ${KEY} == ${P1_KEY_RIGHT} ]]; then
-      ((P1_X++))
-      # Prevent leaving screne right
-      ((P1_X > P1_MAX_X)) && P1_X=${P1_MAX_X}
-      P1_LAST_KEY=${KEY}
-    elif [[ ${KEY} == ${P1_KEY_FIRE} ]]; then
-      if ((P1_RECENTLY_FIRED == 0 && P1_DEAD == 0)); then
-        sound player1-laser
-        case ${P1_FIRE_POWER} in
-          1) P1_LASERS+=("$((P1_X + 4)) $((P1_Y - 1))")
-             ((P1_FIRED++))
-             ;;
-          2) P1_LASERS+=("$((P1_X + 3)) $((P1_Y - 1))")
-             P1_LASERS+=("$((P1_X + 5)) $((P1_Y - 1))")
-             ((P1_FIRED+=2))
-             ;;
-          3) P1_LASERS+=("$((P1_X + 2)) $((P1_Y - 1))")
-             P1_LASERS+=("$((P1_X + 4)) $((P1_Y - 1))")
-             P1_LASERS+=("$((P1_X + 6)) $((P1_Y - 1))")
-             ((P1_FIRED+=3))
-             ;;
-        esac
-        ((P1_RECENTLY_FIRED+=P1_LASER_LATENCY))
-      fi
-      P1_LAST_KEY=${KEY}
-    elif [[ ${KEY} == ${P1_KEY_BOMB} ]]; then
-      if ((P1_BOMBS > 0 && P1_DEAD == 0)); then
-        ((P1_BOMBS--))
-        sound smart-bomb
-        deploy-smartbomb ${P1}
-      fi
-    fi
+    case ${KEY} in
+      # Player 1
+      'q')
+        kill-thread ${GAME_MUSIC_THREAD}
+        teardown
+        ;;
+      ${P1_KEY_UP})
+        ((P1_Y--))
+        # Prevent leaving the top of the screen
+        ((P1_Y < 2)) && P1_Y=2
+        P1_LAST_KEY=${KEY}
+        ;;
+      ${P1_KEY_DOWN})
+        ((P1_Y++))
+        # Prevent leaving the bottom of the screen
+        ((P1_Y > P1_MAX_Y)) && P1_Y=${P1_MAX_Y}
+        P1_LAST_KEY=${KEY}
+        ;;
+      ${P1_KEY_LEFT})
+        ((P1_X--))
+        # Prevent leaving screen left
+        ((P1_X < 0)) && P1_X=0
+        P1_LAST_KEY=${KEY}
+        ;;
+      ${P1_KEY_RIGHT})
+        ((P1_X++))
+        # Prevent leaving screne right
+        ((P1_X > P1_MAX_X)) && P1_X=${P1_MAX_X}
+        P1_LAST_KEY=${KEY}
+        ;;
+      ${P1_KEY_FIRE})
+        if ((P1_RECENTLY_FIRED == 0 && P1_DEAD == 0)); then
+          sound player1-laser
+          case ${P1_FIRE_POWER} in
+            1) P1_LASERS+=("$((P1_X + 4)) $((P1_Y - 1))")
+               ((P1_FIRED++))
+               ;;
+            2) P1_LASERS+=("$((P1_X + 3)) $((P1_Y - 1))")
+               P1_LASERS+=("$((P1_X + 5)) $((P1_Y - 1))")
+               ((P1_FIRED+=2))
+               ;;
+            3) P1_LASERS+=("$((P1_X + 2)) $((P1_Y - 1))")
+               P1_LASERS+=("$((P1_X + 4)) $((P1_Y - 1))")
+               P1_LASERS+=("$((P1_X + 6)) $((P1_Y - 1))")
+               ((P1_FIRED+=3))
+               ;;
+          esac
+          ((P1_RECENTLY_FIRED+=P1_LASER_LATENCY))
+        fi
+        P1_LAST_KEY=${KEY}
+        ;;
+      ${P1_KEY_BOMB})
+        if ((P1_BOMBS > 0 && P1_DEAD == 0)); then
+          ((P1_BOMBS--))
+          sound smart-bomb
+          deploy-smartbomb ${P1}
+        fi
+        P1_LAST_KEY=${KEY}
+        ;;
+    esac
   fi
 
   if ((P2_FRAME == 0)); then
+    case ${KEY} in
     # Player 2
-    if [[ ${KEY} == ${P2_KEY_UP} ]]; then
+    ${P2_KEY_UP})
       ((P2_Y--))
       # Prevent leaving the top of the screen
       ((P2_Y < 2)) && P2_Y=2
       P2_LAST_KEY=${KEY}
-    elif [[ ${KEY} == ${P2_KEY_DOWN} ]]; then
+      ;;
+    ${P2_KEY_DOWN})
       ((P2_Y++))
       # Prevent leaving the bottom of the screen
       ((P2_Y > P2_MAX_Y)) && P2_Y=${P2_MAX_Y}
       P2_LAST_KEY=${KEY}
-    elif [[ ${KEY} == ${P2_KEY_LEFT} ]]; then
+      ;;
+    ${P2_KEY_LEFT})
       ((P2_X--))
       # Prevent leaving screen left
       ((P2_X < 0)) && P2_X=0
       P2_LAST_KEY=${KEY}
-    elif [[ ${KEY} == ${P2_KEY_RIGHT} ]]; then
+      ;;
+    ${P2_KEY_RIGHT})
       ((P2_X++))
       # Prevent leaving screne right
       ((P2_X > P2_MAX_X)) && P2_X=${P2_MAX_X}
       P2_LAST_KEY=${KEY}
-    elif [[ ${KEY} == ${P2_KEY_FIRE} ]]; then
+      ;;
+    ${P2_KEY_FIRE})
       if ((P2_RECENTLY_FIRED == 0 && P2_DEAD == 0)); then
         sound player2-laser
         case ${P2_FIRE_POWER} in
@@ -1316,13 +1311,16 @@ game-loop() {
         ((P2_RECENTLY_FIRED+=P2_LASER_LATENCY))
       fi
       P2_LAST_KEY=${KEY}
-    elif [[ ${KEY} == ${P2_KEY_BOMB} ]]; then
+      ;;
+    ${P2_KEY_BOMB})
       if ((P2_BOMBS > 0 && P2_DEAD == 0)); then
         ((P2_BOMBS--))
         sound smart-bomb
         deploy-smartbomb ${P2}
       fi
-    fi
+      P2_LAST_KEY=${KEY}
+      ;;
+    esac
   fi
   KEY=
 
@@ -1448,17 +1446,24 @@ game-loop() {
     HI_SCORE_PADDED=$(printf "%07d" ${HI_SCORE})
     P1_LIVES_SYMBOLS=$(repeat "♥" "${P1_LIVES}")"   "
     P2_LIVES_SYMBOLS="   "$(repeat "♥" "${P2_LIVES}")
-    P1_BOMB_SYMBOLS=$(repeat "☼" "${P1_BOMBS}")"   "
-    P2_BOMB_SYMBOLS="   "$(repeat "☼" "${P2_BOMBS}")
+    P1_BOMB_SYMBOLS=$(repeat "☼" "${P1_BOMBS}")
+    P2_BOMB_SYMBOLS=$(repeat "☼" "${P2_BOMBS}")
 
     draw 0 0 "${RED}${BBLK}" "1UP ${P1_SCORE_PADDED}"
     draw-centered 0 "${WHT}${BBLK}" "HISCORE ${HI_SCORE_PADDED}"
     draw-right 0 "${blu}${BBLK}" "${P2_SCORE_PADDED} 2UP"
-    draw 0 "${SCREEN_HEIGHT}" "${RED}${BBLK}" "LIVES ${P1_LIVES_SYMBOLS}"
-    draw-right "${SCREEN_HEIGHT}" "${blu}${BBLK}" "${P2_LIVES_SYMBOLS} LIVES"
-    draw 1 "${SCREEN_HEIGHT}" "${YLW}${BBLK}" "BOMBS ${P1_BOMB_SYMBOLS}"
-    draw-right 1 "${cyn}${BBLK}" "${P2_BOMB_SYMBOLS} BOMBS"
+    draw 0 "${SCREEN_HEIGHT}" "${RED}${BBLK}" "LIVES ${P1_LIVES_SYMBOLS}${cyn}BOMBS ${P1_BOMB_SYMBOLS}"
+    draw-right "${SCREEN_HEIGHT}" "${blu}${BBLK}" "${cyn}${P2_BOMB_SYMBOLS} BOMBS${blu}${P2_LIVES_SYMBOLS} LIVES"
   fi
   render
   update-gfx-timers
+}
+
+pause-loop() {
+  if [[ "${KEY}" == "${P1_KEY_PAUSE}" ]] || [[ "${KEY}" == "${P2_KEY_PAUSE}" ]]; then
+    GAME_PAUSED=0
+    export LOOP=game-loop
+    blank-screen
+  fi
+  KEY=
 }
