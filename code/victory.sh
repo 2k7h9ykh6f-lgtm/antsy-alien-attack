@@ -9,12 +9,17 @@ victory-mode() {
   blank-screen
 
   reset-timers
+  highscore-record
   music victory
   VICTORY_MUSIC_THREAD=$!
   sound mission_completed congratulations
 
   lol-draw-centered $((SCREEN_HEIGHT / 2 - 1)) "You defeated the alien horde! Hurray!"
   lol-draw-centered $((SCREEN_HEIGHT / 2 + 1)) "Press [R] to reminisce about the old times or [Q] to Quit"
+
+  if [[ -n "${HIGHSCORE_IO_ERROR}" ]]; then
+    draw-centered $((SCREEN_HEIGHT / 2 + 3)) "${YLW}${BBLK}" "${HIGHSCORE_IO_ERROR}"
+  fi
 
   readarray -t VICTORY_SCREEN < gfx/victory.ans
   VICTORY_SCREEN_LONGEST_LINE=$(wc -L gfx/victory.txt | cut -d' ' -f1)

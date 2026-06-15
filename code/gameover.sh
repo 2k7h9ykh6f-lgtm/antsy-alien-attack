@@ -9,12 +9,17 @@ gameover-mode() {
 
   blank-screen
   reset-timers
+  highscore-record
   music gameover
   GAMEOVER_MUSIC_THREAD=$!
   sound mission_failed game-over 
 
   lol-draw-centered $((SCREEN_HEIGHT / 2 - 1)) "You failed! But you may try again."
   lol-draw-centered $((SCREEN_HEIGHT / 2 + 1)) "Press [R] to seek revenge or [Q] to Quit"
+
+  if [[ -n "${HIGHSCORE_IO_ERROR}" ]]; then
+    draw-centered $((SCREEN_HEIGHT / 2 + 3)) "${YLW}${BBLK}" "${HIGHSCORE_IO_ERROR}"
+  fi
 
   readarray -t GAMEOVER_SCREEN < gfx/gameover.ans
   GAMEOVER_SCREEN_LONGEST_LINE=$(wc -L gfx/gameover.txt | cut -d' ' -f1)

@@ -206,6 +206,8 @@ reset-game() {
   export P2_SCORE=0
   export P1_HI_SCORE_BEATEN=0
   export P2_HI_SCORE_BEATEN=0
+  export P1_TOTAL_KILLS=0
+  export P2_TOTAL_KILLS=0
   case ${NUM_PLAYERS} in
     1)
       export P1_DEAD=0
@@ -876,6 +878,7 @@ fighter-ai() {
             sound shield-impact
           fi
           ((P1_KILLS++))
+          ((P1_TOTAL_KILLS++))
           player-increment-score ${P1} ${FIGHTER_POINTS}
         elif object-collides-player ${P2} "$((FIGHTER_X + 3))" "$((FIGHTER_Y + 2))"; then
           # Remove the fighter
@@ -894,6 +897,7 @@ fighter-ai() {
             sound shield-impact
           fi
           ((P2_KILLS++))
+          ((P2_TOTAL_KILLS++))
           player-increment-score ${P1} ${FIGHTER_POINTS}
         else
           case ${FIGHTER_TYPE} in
@@ -1143,11 +1147,13 @@ player-lasers() {
             unset P1_LASERS[${LASER_LOOP}]
             P1_LASERS=("${P1_LASERS[@]}")
             ((P1_KILLS++))
+            ((P1_TOTAL_KILLS++))
             ;;
           2) erase-sprite-unmasked "${LASER_X}" "${LASER_Y}" "${P2_LASER_SPRITE[@]}"
             unset P2_LASERS[${LASER_LOOP}]
             P2_LASERS=("${P2_LASERS[@]}")
             ((P2_KILLS++))
+            ((P2_TOTAL_KILLS++))
             ;;
         esac
         ((TOTAL_LASERS--))
