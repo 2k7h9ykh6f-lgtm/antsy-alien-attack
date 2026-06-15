@@ -461,6 +461,16 @@ case ${BOSS_TYPE} in
 "$SPC               $HIT$BBLK▀▀▀▀▀$SPC   $HIT$BBLK▀▀▀▀▀");;
 esac
 
+  # Mega Boss tint: at milestone level 10+, recolor the Large boss to red/gold
+  if ((${LEVEL:-0} >= 10 && ${BOSS_LEVEL:-0} == 1)); then
+    local _mb_line=0
+    while ((_mb_line < ${#BOSS_LARGE_0[@]})); do
+      BOSS_LARGE_0[${_mb_line}]="${BOSS_LARGE_0[${_mb_line}]//$WHT/$RED}"
+      BOSS_LARGE_0[${_mb_line}]="${BOSS_LARGE_0[${_mb_line}]//$MGN/$YLW}"
+      ((_mb_line++))
+    done
+  fi
+
   # Increment the play thrust animation speed control
   ((THRUST_FRAME >= THRUST_FRAMES)) && THRUST_FRAME=0 || ((THRUST_FRAME++))
 }
