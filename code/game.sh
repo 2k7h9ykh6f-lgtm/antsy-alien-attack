@@ -242,6 +242,12 @@ reset-game() {
   export P2_LASERS=()
   export P1_FIRE_POWER=1
   export P2_FIRE_POWER=1
+  # Spread-shot power-up: time-limited triple laser. Per-player ticks remaining,
+  # topped up on pickup but capped at SPREAD_MAX so it cannot stack indefinitely.
+  export P1_SPREAD=0
+  export P2_SPREAD=0
+  export SPREAD_DURATION=1500
+  export SPREAD_MAX=3000
   export P1_LASER_CEILING=2
   export P2_LASER_CEILING=2
   export P1_RECENTLY_FIRED=0
@@ -343,12 +349,14 @@ player-death() {
        ((P1_LIVES--))
        P1_FRAME=1
        P1_FIRE_POWER=1
+       P1_SPREAD=0
        ;;
     2) sound-explosion
        erase-sprite-masked "${P2_X}" "${P2_Y}" "${P2_SPRITE[@]}"
        ((P2_LIVES--))
        P2_FRAME=1
        P2_FIRE_POWER=1
+       P2_SPREAD=0
        ;;
   esac
 }
@@ -450,7 +458,29 @@ activate-bonus() {
          2) if ((P2_FIRE_POWER < 2)); then
               ((P2_FIRE_POWER+=1))
               sound power-up
-            else 
+            else
+              sound bonus-points
+            fi
+            ;;
+       esac
+       ;;
+    5) player-increment-score ${PLAYER} ${BONUS_COLLECT}
+       # Spread shot: top up the timer, but clamp at SPREAD_MAX so repeated
+       # pickups extend the duration without stacking forever.
+       case ${PLAYER} in
+         1) if ((P1_SPREAD < SPREAD_MAX)); then
+              ((P1_SPREAD+=SPREAD_DURATION))
+              ((P1_SPREAD > SPREAD_MAX)) && P1_SPREAD=${SPREAD_MAX}
+              sound power-up zap
+            else
+              sound bonus-points
+            fi
+            ;;
+         2) if ((P2_SPREAD < SPREAD_MAX)); then
+              ((P2_SPREAD+=SPREAD_DURATION))
+              ((P2_SPREAD > SPREAD_MAX)) && P2_SPREAD=${SPREAD_MAX}
+              sound power-up zap
+            else
               sound bonus-points
             fi
             ;;
@@ -463,7 +493,7 @@ spawn-bonus() {
   if ((RANDOM % BONUS_SPAWN_RATE == 0)); then
     local BONUS_X="${1}"
     local BONUS_Y="${2}"
-    local BONUS_TYPE=$((RANDOM % 5))
+    local BONUS_TYPE=$((RANDOM % 6))
     ((BONUS_X+=2))
     BONUSES+=("${BONUS_X} ${BONUS_Y} ${BONUS_TYPE}")
   fi
@@ -504,6 +534,10 @@ bonuses() {
         4) BONUS_SPRITE=(
            "$SPC "
            "$mgn‼"
+           );;
+        5) BONUS_SPRITE=(
+           "$SPC "
+           "$blu▲"
            );;
       esac
       if ((BONUS_Y >= SCREEN_HEIGHT)); then
@@ -1218,7 +1252,11 @@ game-loop() {
       'x')
         if ((P1_RECENTLY_FIRED == 0 && P1_DEAD == 0)); then
           sound player1-laser
-          case ${P1_FIRE_POWER} in
+          # Spread shot temporarily fires the 3-lane pattern; the persistent
+          # P1_FIRE_POWER is preserved and resumes when the timer runs out.
+          local P1_FP=${P1_FIRE_POWER}
+          ((P1_SPREAD > 0)) && P1_FP=3
+          case ${P1_FP} in
             1) P1_LASERS+=("$((P1_X + 4)) $((P1_Y - 1))")
                ((P1_FIRED++))
                ;;
@@ -1269,7 +1307,11 @@ game-loop() {
     ',')
       if ((P2_RECENTLY_FIRED == 0 && P2_DEAD == 0)); then
         sound player2-laser
-        case ${P2_FIRE_POWER} in
+        # Spread shot temporarily fires the 3-lane pattern; the persistent
+        # P2_FIRE_POWER is preserved and resumes when the timer runs out.
+        local P2_FP=${P2_FIRE_POWER}
+        ((P2_SPREAD > 0)) && P2_FP=3
+        case ${P2_FP} in
           1) P2_LASERS+=("$((P2_X + 4)) $((P2_Y - 1))")
              ((P2_FIRED++))
              ;;
@@ -1365,6 +1407,10 @@ game-loop() {
       P2_RESPAWN=0
     fi
   fi
+
+  # Count down the spread-shot timers (same cadence as shields).
+  ((P1_SPREAD > 0)) && ((P1_SPREAD--))
+  ((P2_SPREAD > 0)) && ((P2_SPREAD--))
 
   if ((P1_DEAD == 0)); then
     player-sprite ${P1}
