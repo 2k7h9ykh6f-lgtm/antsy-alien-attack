@@ -34,7 +34,7 @@ attract-mode() {
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 6)) "destroyed with financial penalties for each alien that escapes. Efficient use"
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 7)) "of lasers is rewarded. Collect power-ups to enhance your ship and earn bonuses."
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 8)) "Go get 'em!"
-         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] for one player, [2] for two player, [H] High Scores or [Q] to Quit"
+         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] 1P, [2] 2P, [H] High Scores or [Q] Quit"
          ;;
       1) lol-draw-centered $((SCREEN_HEIGHT / 2 - 1)) "P L A Y E R 1   C O N T R O L S"
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 0)) "-------------------------------"
@@ -46,7 +46,7 @@ attract-mode() {
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 6)) ""
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 7)) "[X] Unleash the lasers"
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 8)) ""
-         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] for one player, [2] for two player, [H] High Scores or [Q] to Quit"
+         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] 1P, [2] 2P, [H] High Scores or [Q] Quit"
          ;;
       2) lol-draw-centered $((SCREEN_HEIGHT / 2 - 1)) "P L A Y E R 2   C O N T R O L S"
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 0)) "-------------------------------"
@@ -58,7 +58,7 @@ attract-mode() {
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 6)) ""
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 7)) "[,] Unleash the lasers"
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 8)) ""
-         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] for one player, [2] for two player, [H] High Scores or [Q] to Quit"
+         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] 1P, [2] 2P, [H] High Scores or [Q] Quit"
          ;;
       3) lol-draw-centered $((SCREEN_HEIGHT / 2 -  1)) "P O W E R   U P S"
          lol-draw-centered $((SCREEN_HEIGHT / 2 +  0)) "-----------------"
@@ -72,7 +72,7 @@ attract-mode() {
          raw-draw-centered $((SCREEN_HEIGHT / 2 +  8)) "    $grn≡   Shields     "
          lol-draw-centered $((SCREEN_HEIGHT / 2 +  9)) ""
          raw-draw-centered $((SCREEN_HEIGHT / 2 + 10)) "    $mgn‼   Fire Power  "
-         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] for one player, [2] for two player, [H] High Scores or [Q] to Quit"
+         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] 1P, [2] 2P, [H] High Scores or [Q] Quit"
          ;;
       4) local HUNTER_X=$(( (SCREEN_WIDTH / 2) - (FIGHTER_WIDTH / 2) ))
          local HUNTER_Y=$(( SCREEN_HEIGHT / 2 + 2 ))
@@ -89,7 +89,7 @@ attract-mode() {
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 8)) "Flies toward the nearest player ship."
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 9)) ""
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 10)) "Fires lasers in a straight line."
-         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] for one player, [2] for two player, [H] High Scores or [Q] to Quit"
+         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] 1P, [2] 2P, [H] High Scores or [Q] Quit"
          ;;
       5) local SNIPER_X=$(( (SCREEN_WIDTH / 2) - (FIGHTER_WIDTH / 2) ))
          local SNIPER_Y=$(( SCREEN_HEIGHT / 2 + 2 ))
@@ -106,7 +106,7 @@ attract-mode() {
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 8)) "Flies mostly in straight lines."
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 9)) ""
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 10)) "Fires homing missles."
-         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] for one player, [2] for two player, [H] High Scores or [Q] to Quit"
+         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] 1P, [2] 2P, [H] High Scores or [Q] Quit"
          ;;
       6) local MANAGER_X=$(( (SCREEN_WIDTH / 2) - (BOSS_SMALL_WIDTH / 2) ))
          local MANAGER_Y=$(( SCREEN_HEIGHT / 2 + 2 ))
@@ -117,7 +117,7 @@ attract-mode() {
          draw-sprite-unmasked ${MANAGER_X} ${MANAGER_Y} "${BOSS_SMALL_0[@]}"
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 10)) "Evasive latreal flight path."
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 12)) "Unleashes a modest salvo."
-         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] for one player, [2] for two player, [H] High Scores or [Q] to Quit"
+         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] 1P, [2] 2P, [H] High Scores or [Q] Quit"
          ;;
       7) local DIRECTOR_X=$(( (SCREEN_WIDTH / 2) - (BOSS_MEDIUM_WIDTH / 2) ))
          local DIRECTOR_Y=$(( SCREEN_HEIGHT / 2 + 1 ))
@@ -128,7 +128,7 @@ attract-mode() {
          draw-sprite-unmasked ${DIRECTOR_X} ${DIRECTOR_Y} "${BOSS_MEDIUM_0[@]}"
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 10)) "Evasive latreal flight path."
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 12)) "Unleashes a considerable salvo."
-         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] for one player, [2] for two player, [H] High Scores or [Q] to Quit"
+         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] 1P, [2] 2P, [H] High Scores or [Q] Quit"
          ;;
       8) local PRESIDENT_X=$(( (SCREEN_WIDTH / 2) - (BOSS_LARGE_WIDTH / 2) ))
          local PRESIDENT_Y=$(( SCREEN_HEIGHT / 2 + 1 ))
@@ -139,7 +139,7 @@ attract-mode() {
          draw-sprite-unmasked ${PRESIDENT_X} ${PRESIDENT_Y} "${BOSS_LARGE_0[@]}"
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 10)) "Evasive latreal flight path."
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 12)) "Unleashes a devasting salvo."
-         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] for one player, [2] for two player, [H] High Scores or [Q] to Quit"
+         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] 1P, [2] 2P, [H] High Scores or [Q] Quit"
          ;;
       9) lol-draw-centered $((SCREEN_HEIGHT / 2 - 1)) "C O N F I G U R A T I O N"
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 0)) "-------------------------"
@@ -151,7 +151,7 @@ attract-mode() {
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 6)) "F = Toggle FPS:   ${FPS_TOG}"
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 7)) ""
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 8)) ""
-         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] for one player, [2] for two player, [H] High Scores or [Q] to Quit"
+         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] 1P, [2] 2P, [H] High Scores or [Q] Quit"
          ;;
      10) lol-draw-centered $((SCREEN_HEIGHT / 2 - 1)) "C R E D I T S"
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 0)) "-------------"
@@ -163,29 +163,32 @@ attract-mode() {
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 6)) ""
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 7)) "Sound: Kenney Vleugels & Viktor Hahn"
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 8)) ""
-         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] for one player, [2] for two player, [H] High Scores or [Q] to Quit"
+         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] 1P, [2] 2P, [H] High Scores or [Q] Quit"
          ;;
-    11) lol-draw-centered $((SCREEN_HEIGHT / 2 - 3)) "H I G H   S C O R E S"
-         lol-draw-centered $((SCREEN_HEIGHT / 2 - 2)) "---------------------"
-         local SCORE_RANK=0
-         local S_DATE= S_PLAYERS= S_SCORE= S_LEVEL= S_KILLS=
-         local SCORE_OUTPUT=
-         SCORE_OUTPUT=$(scores-load-top 2>/dev/null)
-         if [[ -n "${SCORE_OUTPUT}" ]]; then
-           while IFS='|' read -r S_DATE S_PLAYERS S_SCORE S_LEVEL S_KILLS; do
-             ((SCORE_RANK++))
-             local S_SCORE_PADDED
-             S_SCORE_PADDED=$(printf "%07d" "${S_SCORE}")
-             if ((S_PLAYERS == 2)); then
-               lol-draw-centered $((SCREEN_HEIGHT / 2 - 1 + SCORE_RANK)) "${SCORE_RANK}. ${S_SCORE_PADDED}  Lvl ${S_LEVEL}  2P  ${S_DATE}"
+     11) lol-draw-centered $((SCREEN_HEIGHT / 2 - 1)) "T O P   S C O R E S"
+         lol-draw-centered $((SCREEN_HEIGHT / 2 + 0)) "-------------------"
+         local HS_LINE=0
+         local HS_Y=$((SCREEN_HEIGHT / 2 + 2))
+         local HS_DATA
+         HS_DATA=$(scores-load 3)
+         if [[ -n "${HS_DATA}" ]]; then
+           while IFS='|' read -r HS_BEST HS_NP HS_P1 HS_P2 HS_LVL HS_P1K HS_P2K HS_TS; do
+             ((HS_LINE++))
+             local HS_MODE="1P"
+             local HS_SCORE_STR
+             if (( HS_NP == 2 )); then
+               HS_MODE="2P"
+               HS_SCORE_STR="$(printf '%07d' ${HS_P1})/$(printf '%07d' ${HS_P2})"
              else
-               lol-draw-centered $((SCREEN_HEIGHT / 2 - 1 + SCORE_RANK)) "${SCORE_RANK}. ${S_SCORE_PADDED}  Lvl ${S_LEVEL}  1P  ${S_DATE}"
+               HS_SCORE_STR="$(printf '%07d' ${HS_P1})"
              fi
-           done <<< "${SCORE_OUTPUT}"
+             draw-centered ${HS_Y} "${wht}${BBLK}" "$(printf '%d' ${HS_LINE}). ${HS_MODE}  ${HS_SCORE_STR}  Lvl $(printf '%d' ${HS_LVL})  ${HS_TS}"
+             ((HS_Y++))
+           done <<< "${HS_DATA}"
          else
-           lol-draw-centered $((SCREEN_HEIGHT / 2 + 2)) "No scores recorded yet."
+           draw-centered $((SCREEN_HEIGHT / 2 + 2)) "${wht}${BBLK}" "No scores yet. Be the first!"
          fi
-         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [C] to clear scores, [1]/[2] to play or [Q] to Quit"
+         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] 1P, [2] 2P, [H] High Scores or [Q] Quit"
          ;;
     esac
     ((TITLE_SCREEN_ATTRACT_MODE >= TITLE_SCREEN_ATTRACT_MODE_MAX)) && TITLE_SCREEN_ATTRACT_MODE=0 || ((TITLE_SCREEN_ATTRACT_MODE++))
@@ -223,16 +226,8 @@ title-loop() {
     kill-thread ${TITLE_MUSIC_THREAD}
     teardown
   elif [[ $KEY == 'h' ]]; then
-    TITLE_SCREEN_ATTRACT_MODE=11
-    TITLE_SCREEN_ATTRACT_COUNT=${TITLE_SCREEN_ATTRACT_MAX}
-    sound switch-on
-  elif [[ $KEY == 'c' ]]; then
-    if ((TITLE_SCREEN_ATTRACT_MODE == 11)); then
-      if scores-clear; then
-        sound switch-off
-      fi
-      TITLE_SCREEN_ATTRACT_COUNT=${TITLE_SCREEN_ATTRACT_MAX}
-    fi
+    kill-thread ${TITLE_MUSIC_THREAD}
+    highscores-mode
   elif [[ $KEY == 'm' ]]; then
     if ((MUSIC_ENABLED == 1)); then
       MUSIC_ENABLED=0

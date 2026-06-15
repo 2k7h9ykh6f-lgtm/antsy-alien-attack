@@ -5,6 +5,7 @@ export FPS_ENABLED=0
 export MUSIC_ENABLED=1
 export SFX_ENABLED=1
 export HI_SCORE=1000
+export SCORES_FILE="${HOME}/.antsy-alien-attack-scores"
 
 cfg-load(){
   if [ -e ${HOME}/.antsy-alien-attack ]; then

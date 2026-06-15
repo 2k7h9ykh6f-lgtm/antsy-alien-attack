@@ -7,25 +7,16 @@ gameover-mode() {
   export GAMEOVER_SCREEN=()
   export GAMEOVER_SCREEN_OFFSET=
 
-  # Save score to high scores file
-  local BEST_SCORE=0
-  local TOTAL_KILLS=0
-  if ((P1_SCORE > P2_SCORE)); then
-    BEST_SCORE=${P1_SCORE}
-  else
-    BEST_SCORE=${P2_SCORE}
-  fi
-  TOTAL_KILLS=$((P1_KILLS + P2_KILLS))
-  scores-save "${NUM_PLAYERS}" "${BEST_SCORE}" "${LEVEL}" "${TOTAL_KILLS}"
-
+  scores-save
   blank-screen
   reset-timers
   music gameover
   GAMEOVER_MUSIC_THREAD=$!
-  sound mission_failed game-over 
+  sound mission_failed game-over
 
   lol-draw-centered $((SCREEN_HEIGHT / 2 - 1)) "You failed! But you may try again."
-  lol-draw-centered $((SCREEN_HEIGHT / 2 + 1)) "Press [R] to seek revenge or [Q] to Quit"
+  draw-centered $((SCREEN_HEIGHT / 2 + 1)) "${WHT}${BBLK}" "P1: $(printf '%07d' ${P1_SCORE})   P2: $(printf '%07d' ${P2_SCORE})"
+  lol-draw-centered $((SCREEN_HEIGHT / 2 + 3)) "Press [R] to seek revenge or [Q] to Quit"
 
   readarray -t GAMEOVER_SCREEN < gfx/gameover.ans
   GAMEOVER_SCREEN_LONGEST_LINE=$(wc -L gfx/gameover.txt | cut -d' ' -f1)

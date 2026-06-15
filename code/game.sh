@@ -159,6 +159,9 @@ level-up() {
   esac
   # Number of fighters that need to be vaniquished to level-up
   export LEVEL_UP_KILLS=$((5 + (LEVEL * (MAX_FIGHTERS * 5)) ))
+  # Accumulate kills from completed levels before resetting
+  ((P1_TOTAL_KILLS+=P1_KILLS))
+  ((P2_TOTAL_KILLS+=P2_KILLS))
   export P1_KILLS=0
   export P2_KILLS=0
   export P1_FIRED=0
@@ -204,6 +207,8 @@ reset-game() {
   readonly P2=2
   export P1_SCORE=0
   export P2_SCORE=0
+  export P1_TOTAL_KILLS=0
+  export P2_TOTAL_KILLS=0
   export P1_HI_SCORE_BEATEN=0
   export P2_HI_SCORE_BEATEN=0
   case ${NUM_PLAYERS} in

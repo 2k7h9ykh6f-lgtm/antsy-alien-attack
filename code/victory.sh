@@ -6,6 +6,8 @@ victory-mode() {
   export VICTORY_MUSIC_THREAD=
   export VICTORY_SCREEN=()
   export VICTORY_SCREEN_OFFSET=
+
+  scores-save
   blank-screen
 
   reset-timers
@@ -14,7 +16,8 @@ victory-mode() {
   sound mission_completed congratulations
 
   lol-draw-centered $((SCREEN_HEIGHT / 2 - 1)) "You defeated the alien horde! Hurray!"
-  lol-draw-centered $((SCREEN_HEIGHT / 2 + 1)) "Press [R] to reminisce about the old times or [Q] to Quit"
+  draw-centered $((SCREEN_HEIGHT / 2 + 1)) "${WHT}${BBLK}" "P1: $(printf '%07d' ${P1_SCORE})   P2: $(printf '%07d' ${P2_SCORE})"
+  lol-draw-centered $((SCREEN_HEIGHT / 2 + 3)) "Press [R] to reminisce about the old times or [Q] to Quit"
 
   readarray -t VICTORY_SCREEN < gfx/victory.ans
   VICTORY_SCREEN_LONGEST_LINE=$(wc -L gfx/victory.txt | cut -d' ' -f1)
