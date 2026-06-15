@@ -101,6 +101,8 @@ export BOSS_MEDIUM_WIDTH=21
 export BOSS_MEDIUM_HEIGHT=8
 export BOSS_LARGE_WIDTH=43
 export BOSS_LARGE_HEIGHT=8
+export MEGA_BOSS_WIDTH=50
+export MEGA_BOSS_HEIGHT=8
 
 readonly BOSS_SMALL_1=(
 "$WHT$BBLK▓▓▓▓▓▓▓▓▓▓"
@@ -217,6 +219,50 @@ readonly BOSS_LARGE_4=(
 "$ylw$BBLK░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░"
 "$ylw$BBLK░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░"
 "$ylw$BBLK░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░")
+
+readonly MEGA_BOSS_1=(
+"$WHT$BBLK▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓"
+"$WHT$BBLK▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓"
+"$WHT$BBLK▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓"
+"$WHT$BBLK▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓"
+"$WHT$BBLK▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓"
+"$WHT$BBLK▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓"
+"$WHT$BBLK▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓"
+"$WHT$BBLK▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓"
+)
+
+readonly MEGA_BOSS_2=(
+"$ylw$BBLK▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓"
+"$ylw$BBLK▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓"
+"$ylw$BBLK▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓"
+"$ylw$BBLK▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓"
+"$ylw$BBLK▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓"
+"$ylw$BBLK▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓"
+"$ylw$BBLK▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓"
+"$ylw$BBLK▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓"
+)
+
+readonly MEGA_BOSS_3=(
+"$ylw$BBLK▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒"
+"$ylw$BBLK▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒"
+"$ylw$BBLK▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒"
+"$ylw$BBLK▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒"
+"$ylw$BBLK▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒"
+"$ylw$BBLK▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒"
+"$ylw$BBLK▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒"
+"$ylw$BBLK▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒"
+)
+
+readonly MEGA_BOSS_4=(
+"$ylw$BBLK░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░"
+"$ylw$BBLK░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░"
+"$ylw$BBLK░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░"
+"$ylw$BBLK░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░"
+"$ylw$BBLK░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░"
+"$ylw$BBLK░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░"
+"$ylw$BBLK░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░"
+"$ylw$BBLK░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░"
+)
 
 readonly FIGHTER_EXPLODE1=(
 "$WHT$BBLK▓▓▓▓▓"
@@ -459,17 +505,19 @@ case ${BOSS_TYPE} in
 "$HIT$BBLK█$MGN◘◘◘$HIT$BBLK█$SPC $HIT$BBLK█$MGN◘◘◘$HIT$BBLK█$SPC   $WHT$BBLK▓$HIT$BBLK█████$WHT$BBLK▓$SPC $WHT$BBLK▓$HIT$BBLK█████$WHT$BBLK▓$SPC   $HIT$BBLK█$MGN◘◘◘$HIT$BBLK█$SPC $HIT$BBLK█$MGN◘◘◘$HIT$BBLK█"
 "$SPC $HIT$BBLK▀▀▀$SPC   $HIT$BBLK▀▀▀$SPC    $HIT$BBLK█$MGN◘◘$HIT$BBLK█$MGN◘◘$HIT$BBLK█$SPC $HIT$BBLK█$MGN◘◘$HIT$BBLK█$MGN◘◘$HIT$BBLK█$SPC    $HIT$BBLK▀▀▀$SPC   $HIT$BBLK▀▀▀"
 "$SPC               $HIT$BBLK▀▀▀▀▀$SPC   $HIT$BBLK▀▀▀▀▀");;
-esac
 
-  # Mega Boss tint: at milestone level 10+, recolor the Large boss to red/gold
-  if ((${LEVEL:-0} >= 10 && ${BOSS_LEVEL:-0} == 1)); then
-    local _mb_line=0
-    while ((_mb_line < ${#BOSS_LARGE_0[@]})); do
-      BOSS_LARGE_0[${_mb_line}]="${BOSS_LARGE_0[${_mb_line}]//$WHT/$RED}"
-      BOSS_LARGE_0[${_mb_line}]="${BOSS_LARGE_0[${_mb_line}]//$MGN/$YLW}"
-      ((_mb_line++))
-    done
-  fi
+  # Mega Boss - every 5th level ultimate boss (50 wide, 8 tall)
+  3) export MEGA_BOSS_0=(
+"$SPC                   $blk$BBLK░░░░░$SPC   $blk$BBLK░░░░░"
+"$SPC $blk$BBLK░░░$SPC   $blk$BBLK░░░$SPC    $blk$BBLK░░$WHT$BBLK▒▒▒$blk$BBLK░░$SPC $blk$BBLK░░$WHT$BBLK▒▒▒$blk$BBLK░░$SPC    $blk$BBLK░░░$SPC   $blk$BBLK░░░"
+"$blk$BBLK░▒▒▒$blk$BBLK░▄$blk$BBLK░▒▒▒$blk$BBLK░▄▄▄$blk$BBLK░$WHT$BBLK▒$HIT$BBLK███$WHT$BBLK▒$blk$BBLK░▄▄▄$blk$BBLK░▒▒▒$blk$BBLK░▄$blk$BBLK░▒▒▒$blk$BBLK░"
+"$WHT$BBLK▓▓$HIT$BBLK█$WHT$BBLK▓▓$SPC $WHT$BBLK▓▓$HIT$BBLK█$WHT$BBLK▓▓$SPC $blk$BBLK█$SPC $WHT$BBLK▓$HIT$BBLK█████$WHT$BBLK▓$SPC $WHT$BBLK▓$HIT$BBLK█████$WHT$BBLK▓$SPC $blk$BBLK█$SPC $WHT$BBLK▓▓$HIT$BBLK█$WHT$BBLK▓▓$SPC $WHT$BBLK▓▓$HIT$BBLK█$WHT$BBLK▓▓"
+"$WHT$BBLK▓$HIT$BBLK███$WHT$BBLK▓$blk$BBLK▄$WHT$BBLK▓$HIT$BBLK███$WHT$BBLK▓$blk$BBLK▄█▄$WHT$BBLK▓$RED$BBLK██$HIT$BBLK███$WHT$BBLK▓$SPC $WHT$BBLK▓$RED$BBLK██$HIT$BBLK███$WHT$BBLK▓$blk$BBLK▄█▄$WHT$BBLK▓$HIT$BBLK███$WHT$BBLK▓$blk$BBLK▄$WHT$BBLK▓$HIT$BBLK███$WHT$BBLK▓"
+"$HIT$BBLK█$MGN$BBLK◥◥◥$HIT$BBLK█$SPC $HIT$BBLK█$MGN$BBLK◥◥◥$HIT$BBLK█$SPC   $WHT$BBLK▓$HIT$BBLK█████$WHT$BBLK▓$SPC $WHT$BBLK▓$HIT$BBLK█████$WHT$BBLK▓$SPC   $HIT$BBLK█$MGN$BBLK◥◥◥$HIT$BBLK█$SPC $HIT$BBLK█$MGN$BBLK◥◥◥$HIT$BBLK█"
+"$SPC $HIT$BBLK▀▀▀$SPC   $HIT$BBLK▀▀▀$SPC    $HIT$BBLK█$MGN$BBLK◥◥$HIT$BBLK█$MGN$BBLK◥◥$HIT$BBLK█$SPC $HIT$BBLK█$MGN$BBLK◥◥$HIT$BBLK█$MGN$BBLK◥◥$HIT$BBLK█$SPC    $HIT$BBLK▀▀▀$SPC   $HIT$BBLK▀▀▀"
+"$SPC                   $HIT$BBLK▀▀▀▀▀$SPC   $HIT$BBLK▀▀▀▀▀"
+");;
+esac
 
   # Increment the play thrust animation speed control
   ((THRUST_FRAME >= THRUST_FRAMES)) && THRUST_FRAME=0 || ((THRUST_FRAME++))

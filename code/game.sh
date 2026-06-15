@@ -113,29 +113,33 @@ level-up() {
 
   ((LEVEL++))
   export MAX_FIGHTERS=$((LEVEL + 1))
-
-  # Determine if this is a Boss milestone level (every 5 levels)
-  if ((LEVEL % 5 == 0)); then
-    export BOSS_LEVEL=1
-  else
-    export BOSS_LEVEL=0
-  fi
-
   case ${LEVEL} in
     1) export LEVEL_COMPENSATION=6
        export MAX_FIGHTER_LASERS=$((MAX_FIGHTERS + 3))
+       export BOSS_X=$(( (SCREEN_WIDTH / 2) - (BOSS_SMALL_WIDTH / 2) ))
+       export BOSS_Y=5
+       export BOSS_TYPE=0
        export DELAY=0.005
        ;;
     2) export LEVEL_COMPENSATION=6
        export MAX_FIGHTER_LASERS=$((MAX_FIGHTERS + 2))
+       export BOSS_X=$(( (SCREEN_WIDTH / 2) - (BOSS_SMALL_WIDTH / 2) ))
+       export BOSS_Y=5
+       export BOSS_TYPE=0
        export DELAY=0.004
        ;;
     3) export LEVEL_COMPENSATION=5
        export MAX_FIGHTER_LASERS=$((MAX_FIGHTERS + 2))
-       export DELAY=0.004
+       export BOSS_X=$(( (SCREEN_WIDTH / 2) - (BOSS_MEDIUM_WIDTH / 2) ))
+       export BOSS_Y=5
+       export BOSS_TYPE=1
+       export DELAY=0.003
        ;;
     4) export LEVEL_COMPENSATION=5
        export MAX_FIGHTER_LASERS=$((MAX_FIGHTERS + 1))
+       export BOSS_X=$(( (SCREEN_WIDTH / 2) - (BOSS_MEDIUM_WIDTH / 2) ))
+       export BOSS_Y=5
+       export BOSS_TYPE=1
        export DELAY=0.003
        ;;
     5) export LEVEL_COMPENSATION=4
@@ -143,22 +147,6 @@ level-up() {
        export BOSS_X=$(( (SCREEN_WIDTH / 2) - (BOSS_LARGE_WIDTH / 2) ))
        export BOSS_Y=5
        export BOSS_TYPE=2
-       export DELAY=0.003
-       ;;
-    6) export LEVEL_COMPENSATION=4
-       export MAX_FIGHTER_LASERS=$((MAX_FIGHTERS + 2))
-       export DELAY=0.003
-       ;;
-    7) export LEVEL_COMPENSATION=4
-       export MAX_FIGHTER_LASERS=$((MAX_FIGHTERS + 1))
-       export DELAY=0.003
-       ;;
-    8) export LEVEL_COMPENSATION=3
-       export MAX_FIGHTER_LASERS=${MAX_FIGHTERS}
-       export DELAY=0.002
-       ;;
-    9) export LEVEL_COMPENSATION=3
-       export MAX_FIGHTER_LASERS=${MAX_FIGHTERS}
        export DELAY=0.002
        ;;
     *) export LEVEL_COMPENSATION=3
@@ -168,7 +156,11 @@ level-up() {
        export BOSS_TYPE=2
        export DELAY=0.002
        ;;
-  esac
+esac
+  # Override boss position for mega boss (wider sprite)
+  if ((MEGA_BOSS == 1)); then
+    export BOSS_X=$(( (SCREEN_WIDTH / 2) - (MEGA_BOSS_WIDTH / 2) ))
+  fi
   # Number of fighters that need to be vaniquished to level-up
   export LEVEL_UP_KILLS=$((5 + (LEVEL * (MAX_FIGHTERS * 5)) ))
   export P1_KILLS=0
@@ -177,30 +169,23 @@ level-up() {
   export P2_FIRED=0
   export P1_MISSES=0
   export P2_MISSES=0
-  # Boss health scales with level; milestone bosses get boosted HP
-  if ((BOSS_LEVEL == 1)); then
-    export BOSS_HEALTH=$((LEVEL * 50))
-    export BOSS_PHASE=0
-  else
-    export BOSS_HEALTH=$((LEVEL * 25))
-    export BOSS_PHASE=0
-  fi
+  export BOSS_HEALTH=$((LEVEL * 25))
   export BOSS_FRAME=0
   export BOSS_X_INCR=0
-  export BOSS_MOVE_COUNTER=0
   export BOSS_SALVO_PATTERN=0
   export BOSS_FIGHT=0
   export BOSS_HIT=0
-
-  # Milestone bosses give more points
-  if ((BOSS_LEVEL == 1)); then
-    export BOSS_POINTS=$((LEVEL * 200))
-  else
-    export BOSS_POINTS=$((LEVEL * 100))
+  export MEGA_BOSS=0
+  if ((LEVEL > 0 && LEVEL % 5 == 0)); then
+    export MEGA_BOSS=1
   fi
 
   # More points as the levels progress.
   export FIGHTER_POINTS=$((LEVEL * 10))
+  export BOSS_POINTS=$((LEVEL * 100))
+  if ((MEGA_BOSS == 1)); then
+    export BOSS_POINTS=$((LEVEL * 500))
+  fi
 
   # Alien spawn rate and fire rate increase with level progression
   export ALIEN_FIRE_RATE=$((200 / LEVEL))
@@ -216,10 +201,10 @@ level-up() {
   # Announce the level
   if ((LEVEL == 1)); then
     sound ready level ${LEVEL} go
-  elif ((BOSS_LEVEL == 1 && LEVEL == LAST_LEVEL)); then
+  elif ((MEGA_BOSS == 1)); then
     sound level ${LEVEL} final_round
-  elif ((BOSS_LEVEL == 1)); then
-    sound level ${LEVEL} boss-fight
+  elif ((LEVEL == LAST_LEVEL)); then
+    sound level ${LEVEL} final_round
   elif ((LEVEL <= LAST_LEVEL)); then
     sound level ${LEVEL}
   fi
@@ -292,6 +277,7 @@ reset-game() {
   # Fighter types
   readonly SNIPER=1
   readonly HUNTER=2
+  export MEGA_BOSS=0
   # The region where hunters originate
   readonly HUNT_REGION_LEFT=$(( (SCREEN_WIDTH / 2) - (FIGHTER_WIDTH * 6) ))
   readonly HUNT_REGION_RIGHT=$(( (SCREEN_WIDTH / 2) + (FIGHTER_WIDTH * 6) ))
@@ -716,9 +702,55 @@ aquire-target() {
   fi
 }
 
+mega-boss-salvo() {
+  local FIGHTER_LASER_COUNT=${#FIGHTER_LASERS[@]}
+  if ((BOSS_FIGHT == 1 && FIGHTER_LASER_COUNT == 0 && ANIMATION_KEYFRAME == 0)); then
+    local PHASE=0
+    local HEALTH_PCT=$((BOSS_HEALTH * 100 / (LEVEL * 25)))
+    if ((HEALTH_PCT <= 33)); then
+      PHASE=2
+    elif ((HEALTH_PCT <= 66)); then
+      PHASE=1
+    fi
+    case ${PHASE} in
+      0) # Phase 1: Wide spread of alternating homing and straight lasers
+         aquire-target "$((BOSS_X + 2))" "$((BOSS_Y + MEGA_BOSS_HEIGHT - 1))" "${P1_MIN_X}" "${P1_MAX_Y}"
+         FIGHTER_LASERS+=("$((BOSS_X + 10)) $((BOSS_Y + MEGA_BOSS_HEIGHT - 1)) ${HUNTER} 0 0")
+         FIGHTER_LASERS+=("$((BOSS_X + 18)) $((BOSS_Y + MEGA_BOSS_HEIGHT - 2)) ${HUNTER} 0 0")
+         aquire-target "$((BOSS_X + 25))" "$((BOSS_Y + MEGA_BOSS_HEIGHT - 1))" 0 0
+         FIGHTER_LASERS+=("$((BOSS_X + 32)) $((BOSS_Y + MEGA_BOSS_HEIGHT - 2)) ${HUNTER} 0 0")
+         aquire-target "$((BOSS_X + 40))" "$((BOSS_Y + MEGA_BOSS_HEIGHT - 1))" "${P1_MAX_X}" "${P1_MAX_Y}"
+         aquire-target "$((BOSS_X + 47))" "$((BOSS_Y + MEGA_BOSS_HEIGHT - 1))" 0 0
+         ;;
+      1) # Phase 2: Crossfire - concentrated center + wide flanks
+         aquire-target "$((BOSS_X + 5))" "$((BOSS_Y + MEGA_BOSS_HEIGHT - 1))" "${P1_MIN_X}" "${P1_MAX_Y}"
+         aquire-target "$((BOSS_X + 12))" "$((BOSS_Y + MEGA_BOSS_HEIGHT - 1))" 0 0
+         FIGHTER_LASERS+=("$((BOSS_X + 20)) $((BOSS_Y + MEGA_BOSS_HEIGHT - 2)) ${HUNTER} 0 0")
+         FIGHTER_LASERS+=("$((BOSS_X + 25)) $((BOSS_Y + MEGA_BOSS_HEIGHT - 2)) ${HUNTER} 0 0")
+         FIGHTER_LASERS+=("$((BOSS_X + 30)) $((BOSS_Y + MEGA_BOSS_HEIGHT - 2)) ${HUNTER} 0 0")
+         aquire-target "$((BOSS_X + 38))" "$((BOSS_Y + MEGA_BOSS_HEIGHT - 1))" 0 0
+         aquire-target "$((BOSS_X + 45))" "$((BOSS_Y + MEGA_BOSS_HEIGHT - 1))" "${P1_MAX_X}" "${P1_MAX_Y}"
+         ;;
+      2) # Phase 3: Rapid barrage - many straight-down lasers
+         FIGHTER_LASERS+=("$((BOSS_X + 3)) $((BOSS_Y + MEGA_BOSS_HEIGHT - 1)) ${HUNTER} 0 0")
+         aquire-target "$((BOSS_X + 8))" "$((BOSS_Y + MEGA_BOSS_HEIGHT - 1))" 0 0
+         FIGHTER_LASERS+=("$((BOSS_X + 15)) $((BOSS_Y + MEGA_BOSS_HEIGHT - 1)) ${HUNTER} 0 0")
+         aquire-target "$((BOSS_X + 20))" "$((BOSS_Y + MEGA_BOSS_HEIGHT - 1))" 0 0
+         FIGHTER_LASERS+=("$((BOSS_X + 25)) $((BOSS_Y + MEGA_BOSS_HEIGHT - 1)) ${HUNTER} 0 0")
+         aquire-target "$((BOSS_X + 30))" "$((BOSS_Y + MEGA_BOSS_HEIGHT - 1))" 0 0
+         FIGHTER_LASERS+=("$((BOSS_X + 35)) $((BOSS_Y + MEGA_BOSS_HEIGHT - 1)) ${HUNTER} 0 0")
+         aquire-target "$((BOSS_X + 42))" "$((BOSS_Y + MEGA_BOSS_HEIGHT - 1))" 0 0
+         FIGHTER_LASERS+=("$((BOSS_X + 47)) $((BOSS_Y + MEGA_BOSS_HEIGHT - 1)) ${HUNTER} 0 0")
+         ;;
+    esac
+    sound fighter-laser
+    ((BOSS_SALVO_PATTERN ^= 1))
+  fi
+}
+
 boss-salvo() {
   local FIGHTER_LASER_COUNT=${#FIGHTER_LASERS[@]}
-  if ((BOSS_FIGHT == 1 && FIGHTER_LASER_COUNT == 0)); then
+  if ((BOSS_FIGHT == 1 && FIGHTER_LASER_COUNT == 0 && ANIMATION_KEYFRAME == 0)); then
     case ${BOSS_TYPE} in
       0) case ${BOSS_SALVO_PATTERN} in
            0) aquire-target "$((BOSS_X))" "$((BOSS_Y + BOSS_SMALL_HEIGHT - 1))" "${P1_MIN_X}" "${P1_MAX_Y}"
@@ -779,41 +811,44 @@ boss-salvo() {
 
 boss-pattern() {
   local BOSS_WIDTH=${1}
-  # Phase-based movement speed: higher phase = faster boss (milestone bosses only)
-  local SPEED=1
-  if ((BOSS_LEVEL == 1)); then
-    case ${BOSS_PHASE} in
-      0) SPEED=1;;
-      1) SPEED=2;;
-      2) SPEED=3;;
-      3) SPEED=4;;
-    esac
-  fi
   if ((BOSS_X_INCR == 0)); then
-    BOSS_X_INCR=${SPEED}
+    BOSS_X_INCR=1
   elif ((BOSS_X + BOSS_WIDTH >= SCREEN_WIDTH)); then
-    BOSS_X_INCR=$(( -SPEED ))
+    BOSS_X_INCR=-1
   elif ((BOSS_X <= 1)); then
-    BOSS_X_INCR=${SPEED}
+    BOSS_X_INCR=1
   fi
   ((BOSS_X+=BOSS_X_INCR))
 }
 
 boss-ai() {
-  # Render boss sprite every LEVEL_COMPENSATION frames
+  # Mega boss AI (BOSS_TYPE=3)
+  if ((MEGA_BOSS == 1)); then
+    if ((ANIMATION_KEYFRAME % LEVEL_COMPENSATION == 0)); then
+      case ${BOSS_FRAME} in
+        0) erase-sprite-unmasked "${BOSS_X}" "${BOSS_Y}" "${MEGA_BOSS_0[@]}"
+           boss-pattern ${MEGA_BOSS_WIDTH}
+           draw-sprite-unmasked "${BOSS_X}" "${BOSS_Y}" "${MEGA_BOSS_0[@]}"
+           ;;
+        1) draw-sprite-unmasked "${BOSS_X}" "${BOSS_Y}" "${MEGA_BOSS_1[@]}";;
+        2) draw-sprite-unmasked "${BOSS_X}" "${BOSS_Y}" "${MEGA_BOSS_2[@]}";;
+        3) draw-sprite-unmasked "${BOSS_X}" "${BOSS_Y}" "${MEGA_BOSS_3[@]}";;
+        4) draw-sprite-unmasked "${BOSS_X}" "${BOSS_Y}" "${MEGA_BOSS_4[@]}";;
+        5) erase-sprite-unmasked "${BOSS_X}" "${BOSS_Y}" "${MEGA_BOSS_4[@]}";;
+      esac
+    fi
+    if ((BOSS_FRAME == 0)); then
+      mega-boss-salvo
+    else
+      sound-explosion
+    fi
+    return
+  fi
   if ((ANIMATION_KEYFRAME % LEVEL_COMPENSATION == 0)); then
     case ${BOSS_TYPE} in
       0) case ${BOSS_FRAME} in
            0) erase-sprite-unmasked "${BOSS_X}" "${BOSS_Y}" "${BOSS_SMALL_0[@]}"
-              # Milestone bosses use phase-gated movement; normal bosses move every render
-              if ((BOSS_LEVEL == 1)); then
-                ((BOSS_MOVE_COUNTER++))
-                if ((BOSS_MOVE_COUNTER % (BOSS_PHASE + 1) == 0)); then
-                  boss-pattern ${BOSS_SMALL_WIDTH}
-                fi
-              else
-                boss-pattern ${BOSS_SMALL_WIDTH}
-              fi
+              boss-pattern ${BOSS_SMALL_WIDTH}
               draw-sprite-unmasked "${BOSS_X}" "${BOSS_Y}" "${BOSS_SMALL_0[@]}"
               ;;
            1) draw-sprite-unmasked "${BOSS_X}" "${BOSS_Y}" "${BOSS_SMALL_1[@]}";;
@@ -825,14 +860,7 @@ boss-ai() {
          ;;
       1) case ${BOSS_FRAME} in
            0) erase-sprite-unmasked "${BOSS_X}" "${BOSS_Y}" "${BOSS_MEDIUM_0[@]}"
-              if ((BOSS_LEVEL == 1)); then
-                ((BOSS_MOVE_COUNTER++))
-                if ((BOSS_MOVE_COUNTER % (BOSS_PHASE + 1) == 0)); then
-                  boss-pattern ${BOSS_MEDIUM_WIDTH}
-                fi
-              else
-                boss-pattern ${BOSS_MEDIUM_WIDTH}
-              fi
+              boss-pattern ${BOSS_MEDIUM_WIDTH}
               draw-sprite-unmasked "${BOSS_X}" "${BOSS_Y}" "${BOSS_MEDIUM_0[@]}"
               ;;
            1) draw-sprite-unmasked "${BOSS_X}" "${BOSS_Y}" "${BOSS_MEDIUM_1[@]}";;
@@ -844,14 +872,7 @@ boss-ai() {
          ;;
       *) case ${BOSS_FRAME} in
            0) erase-sprite-unmasked "${BOSS_X}" "${BOSS_Y}" "${BOSS_LARGE_0[@]}"
-              if ((BOSS_LEVEL == 1)); then
-                ((BOSS_MOVE_COUNTER++))
-                if ((BOSS_MOVE_COUNTER % (BOSS_PHASE + 1) == 0)); then
-                  boss-pattern ${BOSS_LARGE_WIDTH}
-                fi
-              else
-                boss-pattern ${BOSS_LARGE_WIDTH}
-              fi
+              boss-pattern ${BOSS_LARGE_WIDTH}
               draw-sprite-unmasked "${BOSS_X}" "${BOSS_Y}" "${BOSS_LARGE_0[@]}"
               ;;
            1) draw-sprite-unmasked "${BOSS_X}" "${BOSS_Y}" "${BOSS_LARGE_1[@]}";;
@@ -864,13 +885,7 @@ boss-ai() {
     esac
   fi
   if ((BOSS_FRAME == 0)); then
-    # Phase-based attack frequency: higher phase = more frequent salvos
-    case ${BOSS_PHASE} in
-      0) if ((ANIMATION_KEYFRAME % 4 == 0)); then boss-salvo; fi;;
-      1) if ((ANIMATION_KEYFRAME % 3 == 0)); then boss-salvo; fi;;
-      2) if ((ANIMATION_KEYFRAME % 2 == 0)); then boss-salvo; fi;;
-      *) boss-salvo;;
-    esac
+    boss-salvo
   else
     sound-explosion
   fi
@@ -1101,6 +1116,12 @@ player-laser-hit-boss() {
     local BOSS_HEIGHT=0
     local BOSS_SPRITE=()
 
+    # Mega boss overrides BOSS_TYPE dimensions
+    if ((MEGA_BOSS == 1)); then
+      BOSS_WIDTH=${MEGA_BOSS_WIDTH}
+      BOSS_HEIGHT=${MEGA_BOSS_HEIGHT}
+      BOSS_SPRITE="${MEGA_BOSS_0[@]}"
+    else
     case ${BOSS_TYPE} in
       0) BOSS_WIDTH=${BOSS_SMALL_WIDTH}
          BOSS_HEIGHT=${BOSS_SMALL_HEIGHT}
@@ -1115,6 +1136,7 @@ player-laser-hit-boss() {
          BOSS_SPRITE="${BOSS_LARGE_0[@]}"
          ;;
     esac
+    fi
     if ((LASER_X >= BOSS_X && LASER_X <= BOSS_X + BOSS_WIDTH)); then
       if ((LASER_Y >= BOSS_Y && LASER_Y <= BOSS_Y + BOSS_HEIGHT)); then
         sound-explosion
@@ -1373,20 +1395,18 @@ game-loop() {
   fi
 
   if (( (P1_KILLS + P2_KILLS >= LEVEL_UP_KILLS) && BOSS_FIGHT == 0)); then
-    if ((BOSS_LEVEL == 1)); then
-      # Milestone level: trigger the Boss fight
-      kill-thread ${GAME_MUSIC_THREAD}
-      BOSS_FIGHT=1
+    kill-thread ${GAME_MUSIC_THREAD}
+    BOSS_FIGHT=1
+    if ((MEGA_BOSS == 1)); then
+      sound final_round
+      sleep 0.5
+    else
       sound go
       sleep 0.25
-      music boss-fight
-      GAME_MUSIC_THREAD=$!
-    else
-      # Non-boss level: advance directly to next level
-      round-up
-      level-up
     fi
-  fi
+    music boss-fight
+    GAME_MUSIC_THREAD=$!
+  fi 
 
   if ((BOSS_FIGHT == 1 && BOSS_HEALTH <= 0 && BOSS_FRAME >= 7)); then
     # Boss thawted too? Then level up the player.
@@ -1461,22 +1481,6 @@ game-loop() {
   fighter-lasers
   fighter-ai
   if ((BOSS_FIGHT == 1)); then
-    # Boss phase transitions based on remaining health (milestone bosses only)
-    if ((BOSS_LEVEL == 1 && BOSS_FRAME == 0 && BOSS_HEALTH > 0)); then
-      local INITIAL_HEALTH=$((LEVEL * 50))
-      local NEW_PHASE=0
-      if ((BOSS_HEALTH <= INITIAL_HEALTH / 4)); then
-        NEW_PHASE=3
-      elif ((BOSS_HEALTH <= INITIAL_HEALTH / 2)); then
-        NEW_PHASE=2
-      elif ((BOSS_HEALTH <= INITIAL_HEALTH * 3 / 4)); then
-        NEW_PHASE=1
-      fi
-      if ((NEW_PHASE > BOSS_PHASE)); then
-        BOSS_PHASE=${NEW_PHASE}
-        sound shield-impact
-      fi
-    fi
     boss-ai
   fi
 
