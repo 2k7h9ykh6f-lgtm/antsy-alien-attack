@@ -187,19 +187,28 @@ level-up() {
   export FIGHTERS_SPAWNED=0
   export FIGHTERS_ESCAPED=0
 
-  # Announce the level
-  if ((LEVEL == 1)); then
-    sound ready level ${LEVEL} go
-  elif ((LEVEL == LAST_LEVEL)); then
-    sound level ${LEVEL} final_round
-  elif ((LEVEL <= LAST_LEVEL)); then
-    sound level ${LEVEL}
+  # Announce the level (normal mode only; survival handles its own)
+  if ((GAME_MODE == 0)); then
+    if ((LEVEL == 1)); then
+      sound ready level ${LEVEL} go
+    elif ((LEVEL == LAST_LEVEL)); then
+      sound level ${LEVEL} final_round
+    elif ((LEVEL <= LAST_LEVEL)); then
+      sound level ${LEVEL}
+    fi
   fi
 }
 
 reset-game() {
   export LEVEL=0
   export LAST_LEVEL=5
+  export GAME_MODE=0
+  export SURVIVAL_WAVE=0
+  export SURVIVAL_TOTAL_KILLS=0
+  export SURVIVAL_ELAPSED=0
+  export SURVIVAL_ANNOUNCE_FRAMES=0
+  export SURVIVAL_GAME_START_SECOND=0
+  export SURVIVAL_WAVE_START_SECOND=0
   readonly P1=1
   readonly P2=2
   export P1_SCORE=0
@@ -274,6 +283,7 @@ reset-game() {
 
 game-mode() {
   readonly NUM_PLAYERS=${1}
+  GAME_MODE=0
   export DELAY=0.005
   export KEY=
   blank-screen
@@ -408,6 +418,7 @@ deploy-smartbomb() {
       sound-explosion
       spawn-bonus "${FIGHTER_X}" "${FIGHTER_Y}"
       player-increment-score ${PLAYER} ${FIGHTER_POINTS}
+      ((GAME_MODE == 1)) && ((SURVIVAL_TOTAL_KILLS++))
     fi
   done
 }
@@ -876,6 +887,7 @@ fighter-ai() {
             sound shield-impact
           fi
           ((P1_KILLS++))
+          ((GAME_MODE == 1)) && ((SURVIVAL_TOTAL_KILLS++))
           player-increment-score ${P1} ${FIGHTER_POINTS}
         elif object-collides-player ${P2} "$((FIGHTER_X + 3))" "$((FIGHTER_Y + 2))"; then
           # Remove the fighter
@@ -894,6 +906,7 @@ fighter-ai() {
             sound shield-impact
           fi
           ((P2_KILLS++))
+          ((GAME_MODE == 1)) && ((SURVIVAL_TOTAL_KILLS++))
           player-increment-score ${P1} ${FIGHTER_POINTS}
         else
           case ${FIGHTER_TYPE} in
@@ -1143,11 +1156,13 @@ player-lasers() {
             unset P1_LASERS[${LASER_LOOP}]
             P1_LASERS=("${P1_LASERS[@]}")
             ((P1_KILLS++))
+            ((GAME_MODE == 1)) && ((SURVIVAL_TOTAL_KILLS++))
             ;;
           2) erase-sprite-unmasked "${LASER_X}" "${LASER_Y}" "${P2_LASER_SPRITE[@]}"
             unset P2_LASERS[${LASER_LOOP}]
             P2_LASERS=("${P2_LASERS[@]}")
             ((P2_KILLS++))
+            ((GAME_MODE == 1)) && ((SURVIVAL_TOTAL_KILLS++))
             ;;
         esac
         ((TOTAL_LASERS--))
@@ -1305,26 +1320,32 @@ game-loop() {
     ((P2_RECENTLY_FIRED--))
   fi
 
-  if (( (P1_KILLS + P2_KILLS >= LEVEL_UP_KILLS) && BOSS_FIGHT == 0)); then
-    kill-thread ${GAME_MUSIC_THREAD}
-    BOSS_FIGHT=1
-    sound go
-    sleep 0.25
-    music boss-fight
-    GAME_MUSIC_THREAD=$!
-  fi 
-
-  if ((BOSS_FIGHT == 1 && BOSS_HEALTH <= 0 && BOSS_FRAME >= 7)); then
-    # Boss thawted too? Then level up the player.
-    round-up
-    level-up
+  if ((GAME_MODE == 0)); then
+    if (( (P1_KILLS + P2_KILLS >= LEVEL_UP_KILLS) && BOSS_FIGHT == 0)); then
+      kill-thread ${GAME_MUSIC_THREAD}
+      BOSS_FIGHT=1
+      sound go
+      sleep 0.25
+      music boss-fight
+      GAME_MUSIC_THREAD=$!
+    fi
   fi
 
-  # Victory condition stub
-  if ((LEVEL > LAST_LEVEL)); then
-    kill-thread ${GAME_MUSIC_THREAD}
-    victory-mode
-    return 1
+  if ((GAME_MODE == 0)); then
+    if ((BOSS_FIGHT == 1 && BOSS_HEALTH <= 0 && BOSS_FRAME >= 7)); then
+      # Boss defeated? Then level up the player.
+      round-up
+      level-up
+    fi
+    # Victory condition
+    if ((LEVEL > LAST_LEVEL)); then
+      kill-thread ${GAME_MUSIC_THREAD}
+      victory-mode
+      return 1
+    fi
+  else
+    # Survival mode: wave progression check
+    survival-wave-check
   fi
 
   # If player 1 is not registered dead but has no lives, then kill player 1.
@@ -1342,7 +1363,11 @@ game-loop() {
   # Game over condition
   if ((P1_DEAD == 1 && P2_DEAD == 1)); then
     kill-thread ${GAME_MUSIC_THREAD}
-    gameover-mode
+    if ((GAME_MODE == 1)); then
+      survival-gameover-mode
+    else
+      gameover-mode
+    fi
     return 1
   fi
 
@@ -1419,6 +1444,13 @@ game-loop() {
     draw-right 0 "${blu}${BBLK}" "${P2_SCORE_PADDED} 2UP"
     draw 0 "${SCREEN_HEIGHT}" "${RED}${BBLK}" "LIVES ${P1_LIVES_SYMBOLS}"
     draw-right "${SCREEN_HEIGHT}" "${blu}${BBLK}" "${P2_LIVES_SYMBOLS} LIVES"
+    if ((GAME_MODE == 1)); then
+      survival-hud-update
+    fi
+  fi
+  # Wave announcement overlay (survival mode only)
+  if ((GAME_MODE == 1 && SURVIVAL_ANNOUNCE_FRAMES > 0)); then
+    survival-draw-announcement
   fi
   render
   update-gfx-timers

@@ -9,6 +9,7 @@ source code/sfx.sh
 source code/music.sh
 source code/title.sh
 source code/game.sh
+source code/survival.sh
 source code/gameover.sh
 source code/victory.sh
 
