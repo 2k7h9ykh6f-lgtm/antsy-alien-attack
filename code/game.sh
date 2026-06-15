@@ -171,6 +171,12 @@ level-up() {
   export BOSS_SALVO_PATTERN=0
   export BOSS_FIGHT=0
   export BOSS_HIT=0
+  # A boss only guards every 5th level (5, 10, ...).
+  if ((LEVEL % 5 == 0)); then
+    export BOSS_LEVEL=1
+  else
+    export BOSS_LEVEL=0
+  fi
 
   # More points as the levels progress.
   export FIGHTER_POINTS=$((LEVEL * 10))
@@ -198,8 +204,9 @@ level-up() {
 }
 
 reset-game() {
-  export LEVEL=0
-  export LAST_LEVEL=5
+  # START_LEVEL is a debug hook: begin on a chosen level (level-up increments, so subtract 1).
+  export LEVEL=$(( ${START_LEVEL:-1} - 1 ))
+  export LAST_LEVEL=10
   readonly P1=1
   readonly P2=2
   export P1_SCORE=0
@@ -1306,16 +1313,23 @@ game-loop() {
   fi
 
   if (( (P1_KILLS + P2_KILLS >= LEVEL_UP_KILLS) && BOSS_FIGHT == 0)); then
-    kill-thread ${GAME_MUSIC_THREAD}
-    BOSS_FIGHT=1
-    sound go
-    sleep 0.25
-    music boss-fight
-    GAME_MUSIC_THREAD=$!
-  fi 
+    if ((BOSS_LEVEL == 1)); then
+      # Boss level: cue the boss fight.
+      kill-thread ${GAME_MUSIC_THREAD}
+      BOSS_FIGHT=1
+      sound go
+      sleep 0.25
+      music boss-fight
+      GAME_MUSIC_THREAD=$!
+    else
+      # Regular level: enough kills reached, advance straight away.
+      round-up
+      level-up
+    fi
+  fi
 
   if ((BOSS_FIGHT == 1 && BOSS_HEALTH <= 0 && BOSS_FRAME >= 7)); then
-    # Boss thawted too? Then level up the player.
+    # Boss vanquished? Then level up the player.
     round-up
     level-up
   fi
