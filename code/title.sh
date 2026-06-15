@@ -34,7 +34,7 @@ attract-mode() {
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 6)) "destroyed with financial penalties for each alien that escapes. Efficient use"
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 7)) "of lasers is rewarded. Collect power-ups to enhance your ship and earn bonuses."
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 8)) "Go get 'em!"
-         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] 1P, [2] 2P, [3] Survival or [Q]uit"
+         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] one player, [2] two player, [E] Endless Survival or [Q] to Quit"
          ;;
       1) lol-draw-centered $((SCREEN_HEIGHT / 2 - 1)) "P L A Y E R 1   C O N T R O L S"
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 0)) "-------------------------------"
@@ -46,7 +46,7 @@ attract-mode() {
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 6)) ""
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 7)) "[X] Unleash the lasers"
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 8)) ""
-         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] 1P, [2] 2P, [3] Survival or [Q]uit"
+         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] one player, [2] two player, [E] Endless Survival or [Q] to Quit"
          ;;
       2) lol-draw-centered $((SCREEN_HEIGHT / 2 - 1)) "P L A Y E R 2   C O N T R O L S"
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 0)) "-------------------------------"
@@ -58,7 +58,7 @@ attract-mode() {
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 6)) ""
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 7)) "[,] Unleash the lasers"
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 8)) ""
-         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] 1P, [2] 2P, [3] Survival or [Q]uit"
+         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] one player, [2] two player, [E] Endless Survival or [Q] to Quit"
          ;;
       3) lol-draw-centered $((SCREEN_HEIGHT / 2 -  1)) "P O W E R   U P S"
          lol-draw-centered $((SCREEN_HEIGHT / 2 +  0)) "-----------------"
@@ -72,7 +72,7 @@ attract-mode() {
          raw-draw-centered $((SCREEN_HEIGHT / 2 +  8)) "    $grn≡   Shields     "
          lol-draw-centered $((SCREEN_HEIGHT / 2 +  9)) ""
          raw-draw-centered $((SCREEN_HEIGHT / 2 + 10)) "    $mgn‼   Fire Power  "
-         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] 1P, [2] 2P, [3] Survival or [Q]uit"
+         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] one player, [2] two player, [E] Endless Survival or [Q] to Quit"
          ;;
       4) local HUNTER_X=$(( (SCREEN_WIDTH / 2) - (FIGHTER_WIDTH / 2) ))
          local HUNTER_Y=$(( SCREEN_HEIGHT / 2 + 2 ))
@@ -89,7 +89,7 @@ attract-mode() {
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 8)) "Flies toward the nearest player ship."
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 9)) ""
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 10)) "Fires lasers in a straight line."
-         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] 1P, [2] 2P, [3] Survival or [Q]uit"
+         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] one player, [2] two player, [E] Endless Survival or [Q] to Quit"
          ;;
       5) local SNIPER_X=$(( (SCREEN_WIDTH / 2) - (FIGHTER_WIDTH / 2) ))
          local SNIPER_Y=$(( SCREEN_HEIGHT / 2 + 2 ))
@@ -106,7 +106,7 @@ attract-mode() {
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 8)) "Flies mostly in straight lines."
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 9)) ""
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 10)) "Fires homing missles."
-         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] 1P, [2] 2P, [3] Survival or [Q]uit"
+         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] one player, [2] two player, [E] Endless Survival or [Q] to Quit"
          ;;
       6) local MANAGER_X=$(( (SCREEN_WIDTH / 2) - (BOSS_SMALL_WIDTH / 2) ))
          local MANAGER_Y=$(( SCREEN_HEIGHT / 2 + 2 ))
@@ -117,7 +117,7 @@ attract-mode() {
          draw-sprite-unmasked ${MANAGER_X} ${MANAGER_Y} "${BOSS_SMALL_0[@]}"
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 10)) "Evasive latreal flight path."
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 12)) "Unleashes a modest salvo."
-         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] 1P, [2] 2P, [3] Survival or [Q]uit"
+         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] one player, [2] two player, [E] Endless Survival or [Q] to Quit"
          ;;
       7) local DIRECTOR_X=$(( (SCREEN_WIDTH / 2) - (BOSS_MEDIUM_WIDTH / 2) ))
          local DIRECTOR_Y=$(( SCREEN_HEIGHT / 2 + 1 ))
@@ -128,7 +128,7 @@ attract-mode() {
          draw-sprite-unmasked ${DIRECTOR_X} ${DIRECTOR_Y} "${BOSS_MEDIUM_0[@]}"
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 10)) "Evasive latreal flight path."
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 12)) "Unleashes a considerable salvo."
-         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] 1P, [2] 2P, [3] Survival or [Q]uit"
+         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] one player, [2] two player, [E] Endless Survival or [Q] to Quit"
          ;;
       8) local PRESIDENT_X=$(( (SCREEN_WIDTH / 2) - (BOSS_LARGE_WIDTH / 2) ))
          local PRESIDENT_Y=$(( SCREEN_HEIGHT / 2 + 1 ))
@@ -139,7 +139,7 @@ attract-mode() {
          draw-sprite-unmasked ${PRESIDENT_X} ${PRESIDENT_Y} "${BOSS_LARGE_0[@]}"
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 10)) "Evasive latreal flight path."
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 12)) "Unleashes a devasting salvo."
-         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] 1P, [2] 2P, [3] Survival or [Q]uit"
+         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] one player, [2] two player, [E] Endless Survival or [Q] to Quit"
          ;;
       9) lol-draw-centered $((SCREEN_HEIGHT / 2 - 1)) "C O N F I G U R A T I O N"
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 0)) "-------------------------"
@@ -151,7 +151,7 @@ attract-mode() {
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 6)) "F = Toggle FPS:   ${FPS_TOG}"
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 7)) ""
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 8)) ""
-         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] 1P, [2] 2P, [3] Survival or [Q]uit"
+         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] one player, [2] two player, [E] Endless Survival or [Q] to Quit"
          ;;
      10) lol-draw-centered $((SCREEN_HEIGHT / 2 - 1)) "C R E D I T S"
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 0)) "-------------"
@@ -163,19 +163,7 @@ attract-mode() {
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 6)) ""
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 7)) "Sound: Kenney Vleugels & Viktor Hahn"
          lol-draw-centered $((SCREEN_HEIGHT / 2 + 8)) ""
-         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] 1P, [2] 2P, [3] Survival or [Q]uit"
-         ;;
-     11) lol-draw-centered $((SCREEN_HEIGHT / 2 - 1)) "E N D L E S S   S U R V I V A L"
-         lol-draw-centered $((SCREEN_HEIGHT / 2 + 0)) "-------------------------------"
-         lol-draw-centered $((SCREEN_HEIGHT / 2 + 1)) ""
-         lol-draw-centered $((SCREEN_HEIGHT / 2 + 2)) "How long can you survive the alien onslaught?"
-         lol-draw-centered $((SCREEN_HEIGHT / 2 + 3)) ""
-         lol-draw-centered $((SCREEN_HEIGHT / 2 + 4)) "Waves of enemies grow stronger every 30 seconds."
-         lol-draw-centered $((SCREEN_HEIGHT / 2 + 5)) ""
-         lol-draw-centered $((SCREEN_HEIGHT / 2 + 6)) "No bosses. No victory. Just survival."
-         lol-draw-centered $((SCREEN_HEIGHT / 2 + 7)) ""
-         lol-draw-centered $((SCREEN_HEIGHT / 2 + 8)) "Press [3] to begin!"
-         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] 1P, [2] 2P, [3] Survival or [Q]uit"
+         lol-draw-centered $((SCREEN_HEIGHT - 4)) "Press [1] one player, [2] two player, [E] Endless Survival or [Q] to Quit"
          ;;
     esac
     ((TITLE_SCREEN_ATTRACT_MODE >= TITLE_SCREEN_ATTRACT_MODE_MAX)) && TITLE_SCREEN_ATTRACT_MODE=0 || ((TITLE_SCREEN_ATTRACT_MODE++))
@@ -192,7 +180,7 @@ title-mode() {
   export TITLE_SCREEN_ATTRACT_MAX=500
   export TITLE_SCREEN_ATTRACT_COUNT=500
   export TITLE_SCREEN_ATTRACT_MODE=0
-  export TITLE_SCREEN_ATTRACT_MODE_MAX=11
+  export TITLE_SCREEN_ATTRACT_MODE_MAX=10
 
   reset-timers
   music title
@@ -206,13 +194,14 @@ title-mode() {
 }
 
 title-loop() {
-  if [[ $KEY == '1' ]] || [[ $KEY == '2' ]] || [[ $KEY == '3' ]]; then
+  if [[ $KEY == '1' ]] || [[ $KEY == '2' ]]; then
     kill-thread ${TITLE_MUSIC_THREAD}
-    if [[ $KEY == '3' ]]; then
-      survival-mode
-    else
-      game-mode ${KEY}
-    fi
+    export GAME_MODE=campaign
+    game-mode ${KEY}
+  elif [[ $KEY == 'e' ]]; then
+    kill-thread ${TITLE_MUSIC_THREAD}
+    export GAME_MODE=survival
+    game-mode 1
   elif [[ $KEY == 'q' ]]; then
     kill-thread ${TITLE_MUSIC_THREAD}
     teardown

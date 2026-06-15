@@ -26,6 +26,7 @@ victory-mode() {
 victory-loop() {
   if [[ $KEY == 'r' ]]; then
     kill-thread ${VICTORY_MUSIC_THREAD}
+    export GAME_MODE=
     title-mode
   elif [[ $KEY == 'q' ]]; then
     kill-thread ${VICTORY_MUSIC_THREAD}

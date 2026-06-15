@@ -101,6 +101,41 @@ round-up() {
   blank-screen
 }
 
+survival-round-up() {
+  kill-thread ${GAME_MUSIC_THREAD}
+  local WAVE_KILLS=$((P1_KILLS + P2_KILLS))
+  local WAVE_BONUS=$((WAVE_KILLS * FIGHTER_POINTS))
+  local Y_CENTER=$((SCREEN_HEIGHT / 2))
+
+  # Add kills to survival total
+  ((SURVIVAL_TOTAL_KILLS += WAVE_KILLS))
+
+  # Award wave bonus to alive players
+  if ((P1_DEAD == 0)); then
+    ((P1_SCORE += WAVE_BONUS))
+  fi
+  if ((P2_DEAD == 0)); then
+    ((P2_SCORE += WAVE_BONUS))
+  fi
+
+  blank-screen
+  sound round ${SURVIVAL_WAVE} objective-achieved
+
+  # Use level-N graphic if available (modulo 10 for reuse)
+  local GRAPHIC_LEVEL=$(( SURVIVAL_WAVE % 10 ))
+  ((GRAPHIC_LEVEL == 0)) && GRAPHIC_LEVEL=10
+  draw-picture-centered level-${GRAPHIC_LEVEL}
+
+  lol-draw-centered $((Y_CENTER - 2)) "W A V E   ${SURVIVAL_WAVE}   C O M P L E T E"
+  lol-draw-centered $((Y_CENTER - 1)) "-------------------------------------------"
+  lol-draw-centered $((Y_CENTER + 0)) "WAVE KILLS:  ${WAVE_KILLS}"
+  lol-draw-centered $((Y_CENTER + 1)) "WAVE BONUS:  $(printf '%07d' ${WAVE_BONUS})"
+  lol-draw-centered $((Y_CENTER + 3)) "TOTAL KILLS: ${SURVIVAL_TOTAL_KILLS}"
+  render
+  sleep 3
+  blank-screen
+}
+
 level-up() {
   # Remove all fighters and lasers.
   export FIGHTERS=()
@@ -111,6 +146,95 @@ level-up() {
   music "track-${MUSIC_TRACK}"
   GAME_MUSIC_THREAD=$!
 
+  # --- Endless Survival mode: continuous difficulty scaling ---
+  if [[ "${GAME_MODE}" == "survival" ]]; then
+    ((SURVIVAL_WAVE++))
+    ((LEVEL++))
+    export MAX_FIGHTERS=$((4 + SURVIVAL_WAVE))
+    export MAX_FIGHTER_LASERS=$((MAX_FIGHTERS + 2))
+
+    # Boss position and type cycle: wave 1-2 Small, 3-4 Medium, 5+ Large
+    case $(( (SURVIVAL_WAVE - 1) % 5 )) in
+      0|1) export BOSS_TYPE=0
+           export BOSS_X=$(( (SCREEN_WIDTH / 2) - (BOSS_SMALL_WIDTH / 2) ))
+           ;;
+      2|3) export BOSS_TYPE=1
+           export BOSS_X=$(( (SCREEN_WIDTH / 2) - (BOSS_MEDIUM_WIDTH / 2) ))
+           ;;
+      *)   export BOSS_TYPE=2
+           export BOSS_X=$(( (SCREEN_WIDTH / 2) - (BOSS_LARGE_WIDTH / 2) ))
+           ;;
+    esac
+    export BOSS_Y=5
+
+    # Gradually reduce tick delay (floor at 0.002)
+    if ((SURVIVAL_WAVE <= 2)); then
+      export DELAY=0.005
+    elif ((SURVIVAL_WAVE <= 5)); then
+      export DELAY=0.004
+    elif ((SURVIVAL_WAVE <= 10)); then
+      export DELAY=0.003
+    else
+      export DELAY=0.002
+    fi
+
+    # Level compensation decreases with wave
+    if ((SURVIVAL_WAVE <= 3)); then
+      export LEVEL_COMPENSATION=6
+    elif ((SURVIVAL_WAVE <= 7)); then
+      export LEVEL_COMPENSATION=5
+    elif ((SURVIVAL_WAVE <= 12)); then
+      export LEVEL_COMPENSATION=4
+    else
+      export LEVEL_COMPENSATION=3
+    fi
+
+    # Kills required to trigger boss fight
+    export LEVEL_UP_KILLS=$((5 + (SURVIVAL_WAVE * (MAX_FIGHTERS * 5))))
+
+    # Scoring
+    export FIGHTER_POINTS=$((SURVIVAL_WAVE * 10))
+    export BOSS_POINTS=$((SURVIVAL_WAVE * 100))
+
+    # Spawn / fire rates (with floor to keep playable)
+    local _srate=$((125 / SURVIVAL_WAVE))
+    ((_srate < 6)) && _srate=6
+    export ALIEN_SPAWN_RATE=${_srate}
+    local _frate=$((200 / SURVIVAL_WAVE))
+    ((_frate < 10)) && _frate=10
+    export ALIEN_FIRE_RATE=${_frate}
+
+    # Bonus: slightly more generous at higher waves
+    local _brate=$((SURVIVAL_WAVE * 2))
+    ((_brate > 20)) && _brate=20
+    export BONUS_SPAWN_RATE=${_brate}
+    export BONUS_POINTS=$((1000 * SURVIVAL_WAVE))
+    export BONUS_COLLECT=$((100 * SURVIVAL_WAVE))
+
+    # Boss config
+    export BOSS_HEALTH=$((SURVIVAL_WAVE * 25))
+    export BOSS_FRAME=0
+    export BOSS_X_INCR=0
+    export BOSS_SALVO_PATTERN=0
+    export BOSS_FIGHT=0
+    export BOSS_HIT=0
+
+    # Reset per-wave counters
+    export P1_KILLS=0
+    export P2_KILLS=0
+    export P1_FIRED=0
+    export P2_FIRED=0
+    export P1_MISSES=0
+    export P2_MISSES=0
+    export FIGHTERS_SPAWNED=0
+    export FIGHTERS_ESCAPED=0
+
+    # Announce wave
+    sound ready level ${SURVIVAL_WAVE} go
+    return
+  fi
+
+  # --- Campaign mode: original level progression ---
   ((LEVEL++))
   export MAX_FIGHTERS=$((LEVEL + 1))
   case ${LEVEL} in
@@ -187,28 +311,24 @@ level-up() {
   export FIGHTERS_SPAWNED=0
   export FIGHTERS_ESCAPED=0
 
-  # Announce the level (normal mode only; survival handles its own)
-  if ((GAME_MODE == 0)); then
-    if ((LEVEL == 1)); then
-      sound ready level ${LEVEL} go
-    elif ((LEVEL == LAST_LEVEL)); then
-      sound level ${LEVEL} final_round
-    elif ((LEVEL <= LAST_LEVEL)); then
-      sound level ${LEVEL}
-    fi
+  # Announce the level
+  if ((LEVEL == 1)); then
+    sound ready level ${LEVEL} go
+  elif ((LEVEL == LAST_LEVEL)); then
+    sound level ${LEVEL} final_round
+  elif ((LEVEL <= LAST_LEVEL)); then
+    sound level ${LEVEL}
   fi
 }
 
 reset-game() {
   export LEVEL=0
   export LAST_LEVEL=5
-  export GAME_MODE=0
+  # Survival mode variables
   export SURVIVAL_WAVE=0
-  export SURVIVAL_TOTAL_KILLS=0
+  export SURVIVAL_START_TIME=
   export SURVIVAL_ELAPSED=0
-  export SURVIVAL_ANNOUNCE_FRAMES=0
-  export SURVIVAL_GAME_START_SECOND=0
-  export SURVIVAL_WAVE_START_SECOND=0
+  export SURVIVAL_TOTAL_KILLS=0
   readonly P1=1
   readonly P2=2
   export P1_SCORE=0
@@ -283,9 +403,16 @@ reset-game() {
 
 game-mode() {
   readonly NUM_PLAYERS=${1}
-  GAME_MODE=0
   export DELAY=0.005
   export KEY=
+  # Default to campaign if GAME_MODE not set
+  if [[ -z "${GAME_MODE}" ]]; then
+    export GAME_MODE=campaign
+  fi
+  # Record survival start time
+  if [[ "${GAME_MODE}" == "survival" ]]; then
+    export SURVIVAL_START_TIME=${EPOCHREALTIME}
+  fi
   blank-screen
 
   reset-timers
@@ -418,7 +545,6 @@ deploy-smartbomb() {
       sound-explosion
       spawn-bonus "${FIGHTER_X}" "${FIGHTER_Y}"
       player-increment-score ${PLAYER} ${FIGHTER_POINTS}
-      ((GAME_MODE == 1)) && ((SURVIVAL_TOTAL_KILLS++))
     fi
   done
 }
@@ -887,7 +1013,6 @@ fighter-ai() {
             sound shield-impact
           fi
           ((P1_KILLS++))
-          ((GAME_MODE == 1)) && ((SURVIVAL_TOTAL_KILLS++))
           player-increment-score ${P1} ${FIGHTER_POINTS}
         elif object-collides-player ${P2} "$((FIGHTER_X + 3))" "$((FIGHTER_Y + 2))"; then
           # Remove the fighter
@@ -906,7 +1031,6 @@ fighter-ai() {
             sound shield-impact
           fi
           ((P2_KILLS++))
-          ((GAME_MODE == 1)) && ((SURVIVAL_TOTAL_KILLS++))
           player-increment-score ${P1} ${FIGHTER_POINTS}
         else
           case ${FIGHTER_TYPE} in
@@ -1156,13 +1280,11 @@ player-lasers() {
             unset P1_LASERS[${LASER_LOOP}]
             P1_LASERS=("${P1_LASERS[@]}")
             ((P1_KILLS++))
-            ((GAME_MODE == 1)) && ((SURVIVAL_TOTAL_KILLS++))
             ;;
           2) erase-sprite-unmasked "${LASER_X}" "${LASER_Y}" "${P2_LASER_SPRITE[@]}"
             unset P2_LASERS[${LASER_LOOP}]
             P2_LASERS=("${P2_LASERS[@]}")
             ((P2_KILLS++))
-            ((GAME_MODE == 1)) && ((SURVIVAL_TOTAL_KILLS++))
             ;;
         esac
         ((TOTAL_LASERS--))
@@ -1320,32 +1442,30 @@ game-loop() {
     ((P2_RECENTLY_FIRED--))
   fi
 
-  if ((GAME_MODE == 0)); then
-    if (( (P1_KILLS + P2_KILLS >= LEVEL_UP_KILLS) && BOSS_FIGHT == 0)); then
-      kill-thread ${GAME_MUSIC_THREAD}
-      BOSS_FIGHT=1
-      sound go
-      sleep 0.25
-      music boss-fight
-      GAME_MUSIC_THREAD=$!
+  if (( (P1_KILLS + P2_KILLS >= LEVEL_UP_KILLS) && BOSS_FIGHT == 0)); then
+    kill-thread ${GAME_MUSIC_THREAD}
+    BOSS_FIGHT=1
+    sound go
+    sleep 0.25
+    music boss-fight
+    GAME_MUSIC_THREAD=$!
+  fi 
+
+  if ((BOSS_FIGHT == 1 && BOSS_HEALTH <= 0 && BOSS_FRAME >= 7)); then
+    # Boss thwarted? Then level up the player.
+    if [[ "${GAME_MODE}" == "survival" ]]; then
+      survival-round-up
+    else
+      round-up
     fi
+    level-up
   fi
 
-  if ((GAME_MODE == 0)); then
-    if ((BOSS_FIGHT == 1 && BOSS_HEALTH <= 0 && BOSS_FRAME >= 7)); then
-      # Boss defeated? Then level up the player.
-      round-up
-      level-up
-    fi
-    # Victory condition
-    if ((LEVEL > LAST_LEVEL)); then
-      kill-thread ${GAME_MUSIC_THREAD}
-      victory-mode
-      return 1
-    fi
-  else
-    # Survival mode: wave progression check
-    survival-wave-check
+  # Victory condition — campaign mode only
+  if [[ "${GAME_MODE}" == "campaign" ]] && ((LEVEL > LAST_LEVEL)); then
+    kill-thread ${GAME_MUSIC_THREAD}
+    victory-mode
+    return 1
   fi
 
   # If player 1 is not registered dead but has no lives, then kill player 1.
@@ -1363,11 +1483,13 @@ game-loop() {
   # Game over condition
   if ((P1_DEAD == 1 && P2_DEAD == 1)); then
     kill-thread ${GAME_MUSIC_THREAD}
-    if ((GAME_MODE == 1)); then
-      survival-gameover-mode
-    else
-      gameover-mode
+    # Compute survival elapsed time
+    if [[ "${GAME_MODE}" == "survival" && -n "${SURVIVAL_START_TIME}" ]]; then
+      SURVIVAL_ELAPSED=$(echo "${EPOCHREALTIME} - ${SURVIVAL_START_TIME}" | bc -l | cut -d'.' -f1)
+      # Add final kills to total
+      ((SURVIVAL_TOTAL_KILLS += P1_KILLS + P2_KILLS))
     fi
+    gameover-mode
     return 1
   fi
 
@@ -1444,13 +1566,18 @@ game-loop() {
     draw-right 0 "${blu}${BBLK}" "${P2_SCORE_PADDED} 2UP"
     draw 0 "${SCREEN_HEIGHT}" "${RED}${BBLK}" "LIVES ${P1_LIVES_SYMBOLS}"
     draw-right "${SCREEN_HEIGHT}" "${blu}${BBLK}" "${P2_LIVES_SYMBOLS} LIVES"
-    if ((GAME_MODE == 1)); then
-      survival-hud-update
+    # Survival HUD: wave number and elapsed time
+    if [[ "${GAME_MODE}" == "survival" ]]; then
+      local _elapsed_int=0
+      if [[ -n "${SURVIVAL_START_TIME}" ]]; then
+        _elapsed_int=$(echo "${EPOCHREALTIME} - ${SURVIVAL_START_TIME}" | bc -l | cut -d'.' -f1)
+      fi
+      local _mins=$((${_elapsed_int:-0} / 60))
+      local _secs=$((${_elapsed_int:-0} % 60))
+      local _time_str=$(printf "%02d:%02d" ${_mins} ${_secs})
+      draw 0 1 "${YLW}${BBLK}" "WAVE ${SURVIVAL_WAVE}"
+      draw-right 1 "${CYN}${BBLK}" "${_time_str} TIME"
     fi
-  fi
-  # Wave announcement overlay (survival mode only)
-  if ((GAME_MODE == 1 && SURVIVAL_ANNOUNCE_FRAMES > 0)); then
-    survival-draw-announcement
   fi
   render
   update-gfx-timers
