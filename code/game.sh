@@ -15,6 +15,7 @@ round-up() {
   lol-draw-centered $((Y_CENTER - 1)) "---------------------------------"
   if ((P2_DEAD == 0)); then
     P1_SHIELDS=150
+    P1_SPREAD_SHOT=0
     lol-draw-centered $((Y_CENTER + 0)) "P1 KILL BONUS:       ${TEMP_BONUS_PADDED}"
     lol-draw-centered $((Y_CENTER + 1)) "P1 ACCURACY BONUS:   ${PERC_BONUS_PADDED}%"
     lol-draw-centered $((Y_CENTER + 2)) "P1 VITALITY BONUS:   ${TEMP_BONUS_PADDED}"
@@ -22,6 +23,7 @@ round-up() {
   fi
   if ((P2_DEAD == 0)); then
     P2_SHIELDS=150
+    P2_SPREAD_SHOT=0
     lol-draw-centered $((Y_CENTER + 4)) "P2 KILL BONUS:       ${TEMP_BONUS_PADDED}"
     lol-draw-centered $((Y_CENTER + 5)) "P2 ACCURACY BONUS:   ${PERC_BONUS_PADDED}%"
     lol-draw-centered $((Y_CENTER + 6)) "P2 VITALITY BONUS:   ${TEMP_BONUS_PADDED}"
@@ -242,20 +244,18 @@ reset-game() {
   export P2_LASERS=()
   export P1_FIRE_POWER=1
   export P2_FIRE_POWER=1
-  export P1_SPREAD_SHOT=0
-  export P2_SPREAD_SHOT=0
   export P1_LASER_CEILING=2
   export P2_LASER_CEILING=2
   export P1_RECENTLY_FIRED=0
   export P2_RECENTLY_FIRED=0
   export P1_LASER_LATENCY=20
   export P2_LASER_LATENCY=20
-  readonly SPREAD_SHOT_DURATION=600
-  readonly SPREAD_SHOT_MAX=1200
   export P1_LAST_KEY=
   export P2_LAST_KEY=
   export P1_SHIELDS=0
   export P2_SHIELDS=0
+  export P1_SPREAD_SHOT=0
+  export P2_SPREAD_SHOT=0
   export P1_RESPAWN=0
   export P2_RESPAWN=0
   export P1_FRAME=0
@@ -268,6 +268,10 @@ reset-game() {
   # Fighter types
   readonly SNIPER=1
   readonly HUNTER=2
+  # Spread Shot timed power-up
+  readonly SPREAD_SHOT_INITIAL=600
+  readonly SPREAD_SHOT_INCREMENT=600
+  readonly SPREAD_SHOT_MAX=1800
   # The region where hunters originate
   readonly HUNT_REGION_LEFT=$(( (SCREEN_WIDTH / 2) - (FIGHTER_WIDTH * 6) ))
   readonly HUNT_REGION_RIGHT=$(( (SCREEN_WIDTH / 2) + (FIGHTER_WIDTH * 6) ))
@@ -449,7 +453,7 @@ activate-bonus() {
          1) if ((P1_FIRE_POWER < 2)); then
               ((P1_FIRE_POWER+=1))
               sound power-up
-            else 
+            else
               sound bonus-points
             fi
             ;;
@@ -464,14 +468,25 @@ activate-bonus() {
        ;;
     5) player-increment-score ${PLAYER} ${BONUS_COLLECT}
        case ${PLAYER} in
-         1) ((P1_SPREAD_SHOT+=SPREAD_SHOT_DURATION))
-            ((P1_SPREAD_SHOT > SPREAD_SHOT_MAX)) && P1_SPREAD_SHOT=${SPREAD_SHOT_MAX}
+         1) if ((P1_SPREAD_SHOT == 0)); then
+              P1_SPREAD_SHOT=${SPREAD_SHOT_INITIAL}
+              sound power-up
+            else
+              ((P1_SPREAD_SHOT+=SPREAD_SHOT_INCREMENT))
+              ((P1_SPREAD_SHOT > SPREAD_SHOT_MAX)) && P1_SPREAD_SHOT=${SPREAD_SHOT_MAX}
+              sound bonus-points
+            fi
             ;;
-         2) ((P2_SPREAD_SHOT+=SPREAD_SHOT_DURATION))
-            ((P2_SPREAD_SHOT > SPREAD_SHOT_MAX)) && P2_SPREAD_SHOT=${SPREAD_SHOT_MAX}
+         2) if ((P2_SPREAD_SHOT == 0)); then
+              P2_SPREAD_SHOT=${SPREAD_SHOT_INITIAL}
+              sound power-up
+            else
+              ((P2_SPREAD_SHOT+=SPREAD_SHOT_INCREMENT))
+              ((P2_SPREAD_SHOT > SPREAD_SHOT_MAX)) && P2_SPREAD_SHOT=${SPREAD_SHOT_MAX}
+              sound bonus-points
+            fi
             ;;
        esac
-       sound power-up
        ;;
   esac
 }
@@ -524,7 +539,7 @@ bonuses() {
            );;
         5) BONUS_SPRITE=(
            "$SPC "
-           "$wht⁂"
+           "$WHT✦"
            );;
       esac
       if ((BONUS_Y >= SCREEN_HEIGHT)); then
@@ -1401,15 +1416,19 @@ game-loop() {
     fi
   fi
 
-  # Spread shot timer decay
+  # Spread Shot timer decrement
   if ((P1_SPREAD_SHOT > 0)); then
     ((P1_SPREAD_SHOT--))
-    ((P1_SPREAD_SHOT == 0)) && sound shield-down
+    if ((P1_SPREAD_SHOT == 0)); then
+      sound shield-down
+    fi
   fi
 
   if ((P2_SPREAD_SHOT > 0)); then
     ((P2_SPREAD_SHOT--))
-    ((P2_SPREAD_SHOT == 0)) && sound shield-down
+    if ((P2_SPREAD_SHOT == 0)); then
+      sound shield-down
+    fi
   fi
 
   if ((P1_DEAD == 0)); then
@@ -1460,23 +1479,24 @@ game-loop() {
     P1_LIVES_SYMBOLS=$(repeat "♥" "${P1_LIVES}")"   "
     P2_LIVES_SYMBOLS="   "$(repeat "♥" "${P2_LIVES}")
 
-    # Spread shot HUD indicators
-    if ((P1_SPREAD_SHOT > 0)); then
-      local P1_BAR_LEN=$((P1_SPREAD_SHOT * 5 / SPREAD_SHOT_MAX + 1))
-      local P1_SPREAD_BAR=$(repeat "▌" "${P1_BAR_LEN}")
-      P1_LIVES_SYMBOLS="${P1_LIVES_SYMBOLS}${YLW}${BBLK}3x${P1_SPREAD_BAR}${RED}${BBLK}"
-    fi
-    if ((P2_SPREAD_SHOT > 0)); then
-      local P2_BAR_LEN=$((P2_SPREAD_SHOT * 5 / SPREAD_SHOT_MAX + 1))
-      local P2_SPREAD_BAR=$(repeat "▌" "${P2_BAR_LEN}")
-      P2_LIVES_SYMBOLS="${blu}${BBLK}${P2_SPREAD_BAR}x3${blu}${BBLK}${P2_LIVES_SYMBOLS}"
-    fi
-
     draw 0 0 "${RED}${BBLK}" "1UP ${P1_SCORE_PADDED}"
     draw-centered 0 "${WHT}${BBLK}" "HISCORE ${HI_SCORE_PADDED}"
     draw-right 0 "${blu}${BBLK}" "${P2_SCORE_PADDED} 2UP"
     draw 0 "${SCREEN_HEIGHT}" "${RED}${BBLK}" "LIVES ${P1_LIVES_SYMBOLS}"
     draw-right "${SCREEN_HEIGHT}" "${blu}${BBLK}" "${P2_LIVES_SYMBOLS} LIVES"
+
+    # Spread Shot HUD indicators
+    if ((P1_SPREAD_SHOT > 0)); then
+      P1_SS_SECS=$(( P1_SPREAD_SHOT / 60 ))
+      P1_SS_BAR=$(repeat "█" "$(( P1_SPREAD_SHOT * 10 / SPREAD_SHOT_MAX ))")
+      draw 14 "${SCREEN_HEIGHT}" "${WHT}${BBLK}" "✦${P1_SS_SECS}s ${P1_SS_BAR}"
+    fi
+    if ((P2_SPREAD_SHOT > 0)); then
+      P2_SS_SECS=$(( P2_SPREAD_SHOT / 60 ))
+      P2_SS_BAR=$(repeat "█" "$(( P2_SPREAD_SHOT * 10 / SPREAD_SHOT_MAX ))")
+      P2_SS_STR="${P2_SS_BAR} ${P2_SS_SECS}s✦"
+      draw $((SCREEN_WIDTH - 14 - ${#P2_SS_STR})) "${SCREEN_HEIGHT}" "${WHT}${BBLK}" "${P2_SS_STR}"
+    fi
   fi
   render
   update-gfx-timers

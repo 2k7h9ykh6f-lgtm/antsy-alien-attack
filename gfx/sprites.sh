@@ -375,12 +375,21 @@ compose-sprites() {
     esac
   fi
 
-  # Spread shot tint (yellow when active and shields are NOT)
-  if ((P1_SPREAD_SHOT > 0 && P1_SHIELDS == 0)); then
-    COL1=$YLW
+  # If spread shot is active, override ship color with white/cyan flash
+  if ((P1_SPREAD_SHOT > 0)); then
+    case ${THRUST_FRAME} in
+      1) COL1=$WHT ;;
+      2) COL1=$cyn ;;
+      3) COL1=$CYN ;;
+    esac
   fi
-  if ((P2_SPREAD_SHOT > 0 && P2_SHIELDS == 0)); then
-    COL2=$YLW
+
+  if ((P2_SPREAD_SHOT > 0)); then
+    case ${THRUST_FRAME} in
+      1) COL2=$WHT ;;
+      2) COL2=$cyn ;;
+      3) COL2=$CYN ;;
+    esac
   fi
 
   local HIT=${WHT}
