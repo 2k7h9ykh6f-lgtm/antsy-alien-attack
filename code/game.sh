@@ -242,12 +242,16 @@ reset-game() {
   export P2_LASERS=()
   export P1_FIRE_POWER=1
   export P2_FIRE_POWER=1
+  export P1_SPREAD_SHOT=0
+  export P2_SPREAD_SHOT=0
   export P1_LASER_CEILING=2
   export P2_LASER_CEILING=2
   export P1_RECENTLY_FIRED=0
   export P2_RECENTLY_FIRED=0
   export P1_LASER_LATENCY=20
   export P2_LASER_LATENCY=20
+  readonly SPREAD_SHOT_DURATION=600
+  readonly SPREAD_SHOT_MAX=1200
   export P1_LAST_KEY=
   export P2_LAST_KEY=
   export P1_SHIELDS=0
@@ -343,12 +347,14 @@ player-death() {
        ((P1_LIVES--))
        P1_FRAME=1
        P1_FIRE_POWER=1
+       P1_SPREAD_SHOT=0
        ;;
     2) sound-explosion
        erase-sprite-masked "${P2_X}" "${P2_Y}" "${P2_SPRITE[@]}"
        ((P2_LIVES--))
        P2_FRAME=1
        P2_FIRE_POWER=1
+       P2_SPREAD_SHOT=0
        ;;
   esac
 }
@@ -450,11 +456,22 @@ activate-bonus() {
          2) if ((P2_FIRE_POWER < 2)); then
               ((P2_FIRE_POWER+=1))
               sound power-up
-            else 
+            else
               sound bonus-points
             fi
             ;;
        esac
+       ;;
+    5) player-increment-score ${PLAYER} ${BONUS_COLLECT}
+       case ${PLAYER} in
+         1) ((P1_SPREAD_SHOT+=SPREAD_SHOT_DURATION))
+            ((P1_SPREAD_SHOT > SPREAD_SHOT_MAX)) && P1_SPREAD_SHOT=${SPREAD_SHOT_MAX}
+            ;;
+         2) ((P2_SPREAD_SHOT+=SPREAD_SHOT_DURATION))
+            ((P2_SPREAD_SHOT > SPREAD_SHOT_MAX)) && P2_SPREAD_SHOT=${SPREAD_SHOT_MAX}
+            ;;
+       esac
+       sound power-up
        ;;
   esac
 }
@@ -463,7 +480,7 @@ spawn-bonus() {
   if ((RANDOM % BONUS_SPAWN_RATE == 0)); then
     local BONUS_X="${1}"
     local BONUS_Y="${2}"
-    local BONUS_TYPE=$((RANDOM % 5))
+    local BONUS_TYPE=$((RANDOM % 6))
     ((BONUS_X+=2))
     BONUSES+=("${BONUS_X} ${BONUS_Y} ${BONUS_TYPE}")
   fi
@@ -504,6 +521,10 @@ bonuses() {
         4) BONUS_SPRITE=(
            "$SPC "
            "$mgn‼"
+           );;
+        5) BONUS_SPRITE=(
+           "$SPC "
+           "$wht⁂"
            );;
       esac
       if ((BONUS_Y >= SCREEN_HEIGHT)); then
@@ -1218,20 +1239,27 @@ game-loop() {
       'x')
         if ((P1_RECENTLY_FIRED == 0 && P1_DEAD == 0)); then
           sound player1-laser
-          case ${P1_FIRE_POWER} in
-            1) P1_LASERS+=("$((P1_X + 4)) $((P1_Y - 1))")
-               ((P1_FIRED++))
-               ;;
-            2) P1_LASERS+=("$((P1_X + 3)) $((P1_Y - 1))")
-               P1_LASERS+=("$((P1_X + 5)) $((P1_Y - 1))")
-               ((P1_FIRED+=2))
-               ;;
-            3) P1_LASERS+=("$((P1_X + 2)) $((P1_Y - 1))")
-               P1_LASERS+=("$((P1_X + 4)) $((P1_Y - 1))")
-               P1_LASERS+=("$((P1_X + 6)) $((P1_Y - 1))")
-               ((P1_FIRED+=3))
-               ;;
-          esac
+          if ((P1_SPREAD_SHOT > 0)); then
+            P1_LASERS+=("$((P1_X + 2)) $((P1_Y - 1))")
+            P1_LASERS+=("$((P1_X + 4)) $((P1_Y - 1))")
+            P1_LASERS+=("$((P1_X + 6)) $((P1_Y - 1))")
+            ((P1_FIRED+=3))
+          else
+            case ${P1_FIRE_POWER} in
+              1) P1_LASERS+=("$((P1_X + 4)) $((P1_Y - 1))")
+                 ((P1_FIRED++))
+                 ;;
+              2) P1_LASERS+=("$((P1_X + 3)) $((P1_Y - 1))")
+                 P1_LASERS+=("$((P1_X + 5)) $((P1_Y - 1))")
+                 ((P1_FIRED+=2))
+                 ;;
+              3) P1_LASERS+=("$((P1_X + 2)) $((P1_Y - 1))")
+                 P1_LASERS+=("$((P1_X + 4)) $((P1_Y - 1))")
+                 P1_LASERS+=("$((P1_X + 6)) $((P1_Y - 1))")
+                 ((P1_FIRED+=3))
+                 ;;
+            esac
+          fi
           ((P1_RECENTLY_FIRED+=P1_LASER_LATENCY))
         fi
         P1_LAST_KEY=${KEY}
@@ -1269,20 +1297,27 @@ game-loop() {
     ',')
       if ((P2_RECENTLY_FIRED == 0 && P2_DEAD == 0)); then
         sound player2-laser
-        case ${P2_FIRE_POWER} in
-          1) P2_LASERS+=("$((P2_X + 4)) $((P2_Y - 1))")
-             ((P2_FIRED++))
-             ;;
-          2) P2_LASERS+=("$((P2_X + 3)) $((P2_Y - 1))")
-             P2_LASERS+=("$((P2_X + 5)) $((P2_Y - 1))")
-             ((P2_FIRED+=2))
-             ;;
-          3) P2_LASERS+=("$((P2_X + 2)) $((P2_Y - 1))")
-             P2_LASERS+=("$((P2_X + 4)) $((P2_Y - 1))")
-             P2_LASERS+=("$((P2_X + 6)) $((P2_Y - 1))")
-             ((P2_FIRED+=3))
-             ;;
-        esac
+        if ((P2_SPREAD_SHOT > 0)); then
+          P2_LASERS+=("$((P2_X + 2)) $((P2_Y - 1))")
+          P2_LASERS+=("$((P2_X + 4)) $((P2_Y - 1))")
+          P2_LASERS+=("$((P2_X + 6)) $((P2_Y - 1))")
+          ((P2_FIRED+=3))
+        else
+          case ${P2_FIRE_POWER} in
+            1) P2_LASERS+=("$((P2_X + 4)) $((P2_Y - 1))")
+               ((P2_FIRED++))
+               ;;
+            2) P2_LASERS+=("$((P2_X + 3)) $((P2_Y - 1))")
+               P2_LASERS+=("$((P2_X + 5)) $((P2_Y - 1))")
+               ((P2_FIRED+=2))
+               ;;
+            3) P2_LASERS+=("$((P2_X + 2)) $((P2_Y - 1))")
+               P2_LASERS+=("$((P2_X + 4)) $((P2_Y - 1))")
+               P2_LASERS+=("$((P2_X + 6)) $((P2_Y - 1))")
+               ((P2_FIRED+=3))
+               ;;
+          esac
+        fi
         ((P2_RECENTLY_FIRED+=P2_LASER_LATENCY))
       fi
       P2_LAST_KEY=${KEY}
@@ -1366,6 +1401,17 @@ game-loop() {
     fi
   fi
 
+  # Spread shot timer decay
+  if ((P1_SPREAD_SHOT > 0)); then
+    ((P1_SPREAD_SHOT--))
+    ((P1_SPREAD_SHOT == 0)) && sound shield-down
+  fi
+
+  if ((P2_SPREAD_SHOT > 0)); then
+    ((P2_SPREAD_SHOT--))
+    ((P2_SPREAD_SHOT == 0)) && sound shield-down
+  fi
+
   if ((P1_DEAD == 0)); then
     player-sprite ${P1}
   fi
@@ -1413,6 +1459,18 @@ game-loop() {
     HI_SCORE_PADDED=$(printf "%07d" ${HI_SCORE})
     P1_LIVES_SYMBOLS=$(repeat "♥" "${P1_LIVES}")"   "
     P2_LIVES_SYMBOLS="   "$(repeat "♥" "${P2_LIVES}")
+
+    # Spread shot HUD indicators
+    if ((P1_SPREAD_SHOT > 0)); then
+      local P1_BAR_LEN=$((P1_SPREAD_SHOT * 5 / SPREAD_SHOT_MAX + 1))
+      local P1_SPREAD_BAR=$(repeat "▌" "${P1_BAR_LEN}")
+      P1_LIVES_SYMBOLS="${P1_LIVES_SYMBOLS}${YLW}${BBLK}3x${P1_SPREAD_BAR}${RED}${BBLK}"
+    fi
+    if ((P2_SPREAD_SHOT > 0)); then
+      local P2_BAR_LEN=$((P2_SPREAD_SHOT * 5 / SPREAD_SHOT_MAX + 1))
+      local P2_SPREAD_BAR=$(repeat "▌" "${P2_BAR_LEN}")
+      P2_LIVES_SYMBOLS="${blu}${BBLK}${P2_SPREAD_BAR}x3${blu}${BBLK}${P2_LIVES_SYMBOLS}"
+    fi
 
     draw 0 0 "${RED}${BBLK}" "1UP ${P1_SCORE_PADDED}"
     draw-centered 0 "${WHT}${BBLK}" "HISCORE ${HI_SCORE_PADDED}"

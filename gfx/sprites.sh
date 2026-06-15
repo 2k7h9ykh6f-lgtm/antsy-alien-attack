@@ -375,6 +375,14 @@ compose-sprites() {
     esac
   fi
 
+  # Spread shot tint (yellow when active and shields are NOT)
+  if ((P1_SPREAD_SHOT > 0 && P1_SHIELDS == 0)); then
+    COL1=$YLW
+  fi
+  if ((P2_SPREAD_SHOT > 0 && P2_SHIELDS == 0)); then
+    COL2=$YLW
+  fi
+
   local HIT=${WHT}
 
   # Impact flashes when boss ships take laser fire
