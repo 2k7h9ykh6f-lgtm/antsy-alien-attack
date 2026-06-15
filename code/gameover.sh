@@ -9,17 +9,22 @@ gameover-mode() {
 
   blank-screen
   reset-timers
-  highscore-record
   music gameover
   GAMEOVER_MUSIC_THREAD=$!
-  sound mission_failed game-over 
+  sound mission_failed game-over
+
+  # Persist this game's result to the local high score table. A write failure
+  # is surfaced to the player but must not interrupt the game over flow.
+  local SAVE_MSG="Your score has been recorded."
+  if ! highscore-record "${NUM_PLAYERS}" "${LEVEL}" \
+       "$(( ${P1_KILLS_TOTAL:-0} + ${P2_KILLS_TOTAL:-0} ))" \
+       "${P1_SCORE}" "${P2_SCORE}"; then
+    SAVE_MSG="Warning: high score could not be saved."
+  fi
 
   lol-draw-centered $((SCREEN_HEIGHT / 2 - 1)) "You failed! But you may try again."
   lol-draw-centered $((SCREEN_HEIGHT / 2 + 1)) "Press [R] to seek revenge or [Q] to Quit"
-
-  if [[ -n "${HIGHSCORE_IO_ERROR}" ]]; then
-    draw-centered $((SCREEN_HEIGHT / 2 + 3)) "${YLW}${BBLK}" "${HIGHSCORE_IO_ERROR}"
-  fi
+  lol-draw-centered $((SCREEN_HEIGHT / 2 + 3)) "${SAVE_MSG}"
 
   readarray -t GAMEOVER_SCREEN < gfx/gameover.ans
   GAMEOVER_SCREEN_LONGEST_LINE=$(wc -L gfx/gameover.txt | cut -d' ' -f1)

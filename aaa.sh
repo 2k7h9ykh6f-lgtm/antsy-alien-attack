@@ -11,7 +11,6 @@ source code/title.sh
 source code/game.sh
 source code/gameover.sh
 source code/victory.sh
-source code/highscores.sh
 
 export LOOP=
 
