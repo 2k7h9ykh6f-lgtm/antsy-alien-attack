@@ -7,6 +7,17 @@ gameover-mode() {
   export GAMEOVER_SCREEN=()
   export GAMEOVER_SCREEN_OFFSET=
 
+  # Save score to high scores file
+  local BEST_SCORE=0
+  local TOTAL_KILLS=0
+  if ((P1_SCORE > P2_SCORE)); then
+    BEST_SCORE=${P1_SCORE}
+  else
+    BEST_SCORE=${P2_SCORE}
+  fi
+  TOTAL_KILLS=$((P1_KILLS + P2_KILLS))
+  scores-save "${NUM_PLAYERS}" "${BEST_SCORE}" "${LEVEL}" "${TOTAL_KILLS}"
+
   blank-screen
   reset-timers
   music gameover

@@ -10,6 +10,7 @@ source code/music.sh
 source code/title.sh
 source code/game.sh
 source code/gameover.sh
+source code/scores.sh
 source code/victory.sh
 
 export LOOP=
