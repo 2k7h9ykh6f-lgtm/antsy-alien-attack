@@ -9,8 +9,10 @@ round-up() {
   TEMP_BONUS_PADDED=$(printf "%07d" ${TEMP_BONUS})
   PERC_BONUS_PADDED=$(printf "%06d" ${TEMP_BONUS})
   sleep 2
-  sound round ${LEVEL} objective-achieved
-  draw-picture-centered level-${LEVEL}
+  # Level-title art / number SFX only exist for 1..10; clamp for endless runs.
+  local ART_LEVEL=$(( LEVEL > 10 ? 10 : LEVEL ))
+  sound round ${ART_LEVEL} objective-achieved
+  draw-picture-centered level-${ART_LEVEL}
   lol-draw-centered $((Y_CENTER - 2)) "P E R F O R M A N C E   B O N U S"
   lol-draw-centered $((Y_CENTER - 1)) "---------------------------------"
   if ((P2_DEAD == 0)); then
@@ -159,6 +161,8 @@ level-up() {
   esac
   # Number of fighters that need to be vaniquished to level-up
   export LEVEL_UP_KILLS=$((5 + (LEVEL * (MAX_FIGHTERS * 5)) ))
+  # In survival, fold the level's kills into the run total before they reset.
+  [[ ${GAME_MODE} == survival ]] && ((SURVIVAL_KILLS += P1_KILLS + P2_KILLS))
   export P1_KILLS=0
   export P2_KILLS=0
   export P1_FIRED=0
@@ -195,6 +199,38 @@ level-up() {
   elif ((LEVEL <= LAST_LEVEL)); then
     sound level ${LEVEL}
   fi
+
+  # Survival difficulty is wave-driven; re-apply it after the per-level recompute.
+  [[ ${GAME_MODE} == survival ]] && survival-escalate
+}
+
+survival-reset() {
+  # Endless Survival run state. Uses the bash SECONDS builtin as a free
+  # elapsed-time source (same one reset-timers relies on in gfx.sh).
+  export SURVIVAL_START_SEC=${SECONDS}
+  export WAVE_INTERVAL=30
+  export SURVIVAL_WAVE=1
+  export SURVIVAL_NEXT_WAVE_SEC=$((SURVIVAL_START_SEC + WAVE_INTERVAL))
+  export SURVIVAL_KILLS=0          # cumulative; P1_KILLS/P2_KILLS reset each level-up
+  export SURVIVAL_ELAPSED=0        # frozen at death for the Game Over screen
+  export SURVIVAL_BANNER_UNTIL=0   # SECONDS threshold until which the wave banner shows
+  export SURVIVAL_BANNER_SHOWN=0
+  # Survival is single-player. Force P2 dead so the game-over (both dead) check
+  # is correct even if the pre-existing readonly NUM_PLAYERS is stale.
+  export P2_DEAD=1
+  export P2_LIVES=0
+}
+
+survival-escalate() {
+  # Single source of truth for survival difficulty. Wave-driven with hard
+  # floors so an unbounded run never drives ALIEN_*_RATE to 0 (RANDOM % 0).
+  local W=${SURVIVAL_WAVE}
+  export MAX_FIGHTERS=$(( LEVEL + 1 + (W / 2) ))
+  export MAX_FIGHTER_LASERS=$(( MAX_FIGHTERS + 2 ))
+  export ALIEN_SPAWN_RATE=$(( 90 - (W * 5) ))
+  ((ALIEN_SPAWN_RATE < 8)) && ALIEN_SPAWN_RATE=8
+  export ALIEN_FIRE_RATE=$(( 150 - (W * 8) ))
+  ((ALIEN_FIRE_RATE < 12)) && ALIEN_FIRE_RATE=12
 }
 
 reset-game() {
@@ -269,10 +305,14 @@ reset-game() {
   readonly HUNT_REGION_RIGHT=$(( (SCREEN_WIDTH / 2) + (FIGHTER_WIDTH * 6) ))
   export BONUSES=()
   create-starfield
+  [[ ${GAME_MODE} == survival ]] && survival-reset
   level-up
 }
 
 game-mode() {
+  # Default to campaign unless the title screen selected survival.
+  : "${GAME_MODE:=campaign}"
+  export GAME_MODE
   readonly NUM_PLAYERS=${1}
   export DELAY=0.005
   export KEY=
@@ -1303,6 +1343,15 @@ game-loop() {
     P2_RECENTLY_FIRED=0
   elif ((P2_RECENTLY_FIRED > 0)); then
     ((P2_RECENTLY_FIRED--))
+  fi
+
+  # Endless Survival: advance a wave every WAVE_INTERVAL seconds of elapsed time.
+  if [[ ${GAME_MODE} == survival ]] && ((SECONDS >= SURVIVAL_NEXT_WAVE_SEC)); then
+    ((SURVIVAL_WAVE++))
+    SURVIVAL_NEXT_WAVE_SEC=$((SURVIVAL_NEXT_WAVE_SEC + WAVE_INTERVAL))
+    survival-escalate
+    SURVIVAL_BANNER_UNTIL=$((SECONDS + 2))
+    sound level $(( SURVIVAL_WAVE > 10 ? 10 : SURVIVAL_WAVE ))
   fi
 
   if (( (P1_KILLS + P2_KILLS >= LEVEL_UP_KILLS) && BOSS_FIGHT == 0)); then
