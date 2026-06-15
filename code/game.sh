@@ -242,12 +242,10 @@ reset-game() {
   export P2_LASERS=()
   export P1_FIRE_POWER=1
   export P2_FIRE_POWER=1
-  # Spread-shot power-up: time-limited triple laser. Per-player ticks remaining,
-  # topped up on pickup but capped at SPREAD_MAX so it cannot stack indefinitely.
   export P1_SPREAD=0
   export P2_SPREAD=0
-  export SPREAD_DURATION=1500
-  export SPREAD_MAX=3000
+  export SPREAD_DURATION=1200
+  export SPREAD_MAX=2400
   export P1_LASER_CEILING=2
   export P2_LASER_CEILING=2
   export P1_RECENTLY_FIRED=0
@@ -465,24 +463,13 @@ activate-bonus() {
        esac
        ;;
     5) player-increment-score ${PLAYER} ${BONUS_COLLECT}
-       # Spread shot: top up the timer, but clamp at SPREAD_MAX so repeated
-       # pickups extend the duration without stacking forever.
+       sound power-up
        case ${PLAYER} in
-         1) if ((P1_SPREAD < SPREAD_MAX)); then
-              ((P1_SPREAD+=SPREAD_DURATION))
-              ((P1_SPREAD > SPREAD_MAX)) && P1_SPREAD=${SPREAD_MAX}
-              sound power-up zap
-            else
-              sound bonus-points
-            fi
+         1) ((P1_SPREAD+=SPREAD_DURATION))
+            ((P1_SPREAD > SPREAD_MAX)) && P1_SPREAD=${SPREAD_MAX}
             ;;
-         2) if ((P2_SPREAD < SPREAD_MAX)); then
-              ((P2_SPREAD+=SPREAD_DURATION))
-              ((P2_SPREAD > SPREAD_MAX)) && P2_SPREAD=${SPREAD_MAX}
-              sound power-up zap
-            else
-              sound bonus-points
-            fi
+         2) ((P2_SPREAD+=SPREAD_DURATION))
+            ((P2_SPREAD > SPREAD_MAX)) && P2_SPREAD=${SPREAD_MAX}
             ;;
        esac
        ;;
@@ -537,7 +524,7 @@ bonuses() {
            );;
         5) BONUS_SPRITE=(
            "$SPC "
-           "$blu▲"
+           "$wht▲"
            );;
       esac
       if ((BONUS_Y >= SCREEN_HEIGHT)); then
@@ -1148,6 +1135,7 @@ player-lasers() {
     local LASER_INSTANCE=()
     local LASER_X=0
     local LASER_Y=0
+    local LASER_DX=0
     local LASER_LOOP=0
     for (( LASER_LOOP=0; LASER_LOOP < TOTAL_LASERS; LASER_LOOP++ )); do
       case ${PLAYER} in
@@ -1156,7 +1144,23 @@ player-lasers() {
       esac
       LASER_X=${LASER_INSTANCE[0]}
       LASER_Y=${LASER_INSTANCE[1]}
+      LASER_DX=${LASER_INSTANCE[2]:-0}
       if ((LASER_Y <= LASER_CEILING)); then
+        case ${PLAYER} in
+          1) erase-sprite-unmasked "${LASER_X}" "${LASER_Y}" "${P1_LASER_SPRITE[@]}"
+             unset P1_LASERS[${LASER_LOOP}]
+             P1_LASERS=("${P1_LASERS[@]}")
+             ((P1_MISSES++))
+             ;;
+          2) erase-sprite-unmasked "${LASER_X}" "${LASER_Y}" "${P2_LASER_SPRITE[@]}"
+             unset P2_LASERS[${LASER_LOOP}]
+             P2_LASERS=("${P2_LASERS[@]}")
+             ((P2_MISSES++))
+             ;;
+        esac
+        ((TOTAL_LASERS--))
+        continue
+      elif ((LASER_DX != 0 && (LASER_X <= 1 || LASER_X >= SCREEN_WIDTH))); then
         case ${PLAYER} in
           1) erase-sprite-unmasked "${LASER_X}" "${LASER_Y}" "${P1_LASER_SPRITE[@]}"
              unset P1_LASERS[${LASER_LOOP}]
@@ -1202,18 +1206,54 @@ player-lasers() {
         player-increment-score ${PLAYER} ${BOSS_POINTS}
         continue
       else
+        if ((LASER_DX != 0)); then
+          case ${PLAYER} in
+            1) erase-sprite-unmasked "${LASER_X}" "${LASER_Y}" "${P1_LASER_SPRITE[@]}";;
+            2) erase-sprite-unmasked "${LASER_X}" "${LASER_Y}" "${P2_LASER_SPRITE[@]}";;
+          esac
+        fi
         ((LASER_Y--))
+        ((LASER_X+=LASER_DX))
         case ${PLAYER} in
           1) draw-sprite-unmasked "${LASER_X}" "${LASER_Y}" "${P1_LASER_SPRITE[@]}"
-             P1_LASERS[$LASER_LOOP]="${LASER_X} ${LASER_Y}"
+             P1_LASERS[$LASER_LOOP]="${LASER_X} ${LASER_Y} ${LASER_DX}"
              ;;
           2) draw-sprite-unmasked "${LASER_X}" "${LASER_Y}" "${P2_LASER_SPRITE[@]}"
-             P2_LASERS[$LASER_LOOP]="${LASER_X} ${LASER_Y}"
+             P2_LASERS[$LASER_LOOP]="${LASER_X} ${LASER_Y} ${LASER_DX}"
              ;;
         esac
       fi
     done
   fi
+}
+
+draw-spread-status() {
+  local PLAYER=${1}
+  local SPREAD=0
+  case ${PLAYER} in
+    1) SPREAD=${P1_SPREAD};;
+    2) SPREAD=${P2_SPREAD};;
+  esac
+
+  local WIDTH=17
+  if ((SPREAD <= 0)); then
+    case ${PLAYER} in
+      1) draw 12 1 "${SPC}" "$(repeat " " ${WIDTH})";;
+      2) draw $((SCREEN_WIDTH - 29)) 1 "${SPC}" "$(repeat " " ${WIDTH})";;
+    esac
+    return
+  fi
+
+  local CELLS=$(( (SPREAD * 10 + SPREAD_MAX - 1) / SPREAD_MAX ))
+  ((CELLS < 1)) && CELLS=1
+  ((CELLS > 10)) && CELLS=10
+  local FILLED=$(repeat "█" ${CELLS})
+  local EMPTY=$(repeat "░" $((10 - CELLS)))
+
+  case ${PLAYER} in
+    1) draw 12 1 "${RED}${BBLK}" "SPREAD ${FILLED}${EMPTY}";;
+    2) draw $((SCREEN_WIDTH - 29)) 1 "${blu}${BBLK}" "${EMPTY}${FILLED} SPREAD";;
+  esac
 }
 
 game-loop() {
@@ -1252,24 +1292,27 @@ game-loop() {
       'x')
         if ((P1_RECENTLY_FIRED == 0 && P1_DEAD == 0)); then
           sound player1-laser
-          # Spread shot temporarily fires the 3-lane pattern; the persistent
-          # P1_FIRE_POWER is preserved and resumes when the timer runs out.
-          local P1_FP=${P1_FIRE_POWER}
-          ((P1_SPREAD > 0)) && P1_FP=3
-          case ${P1_FP} in
-            1) P1_LASERS+=("$((P1_X + 4)) $((P1_Y - 1))")
-               ((P1_FIRED++))
-               ;;
-            2) P1_LASERS+=("$((P1_X + 3)) $((P1_Y - 1))")
-               P1_LASERS+=("$((P1_X + 5)) $((P1_Y - 1))")
-               ((P1_FIRED+=2))
-               ;;
-            3) P1_LASERS+=("$((P1_X + 2)) $((P1_Y - 1))")
-               P1_LASERS+=("$((P1_X + 4)) $((P1_Y - 1))")
-               P1_LASERS+=("$((P1_X + 6)) $((P1_Y - 1))")
-               ((P1_FIRED+=3))
-               ;;
-          esac
+          if ((P1_SPREAD > 0)); then
+            P1_LASERS+=("$((P1_X + 4)) $((P1_Y - 1)) 0")
+            P1_LASERS+=("$((P1_X + 2)) $((P1_Y - 1)) -1")
+            P1_LASERS+=("$((P1_X + 6)) $((P1_Y - 1)) 1")
+            ((P1_FIRED+=3))
+          else
+            case ${P1_FIRE_POWER} in
+              1) P1_LASERS+=("$((P1_X + 4)) $((P1_Y - 1))")
+                 ((P1_FIRED++))
+                 ;;
+              2) P1_LASERS+=("$((P1_X + 3)) $((P1_Y - 1))")
+                 P1_LASERS+=("$((P1_X + 5)) $((P1_Y - 1))")
+                 ((P1_FIRED+=2))
+                 ;;
+              3) P1_LASERS+=("$((P1_X + 2)) $((P1_Y - 1))")
+                 P1_LASERS+=("$((P1_X + 4)) $((P1_Y - 1))")
+                 P1_LASERS+=("$((P1_X + 6)) $((P1_Y - 1))")
+                 ((P1_FIRED+=3))
+                 ;;
+            esac
+          fi
           ((P1_RECENTLY_FIRED+=P1_LASER_LATENCY))
         fi
         P1_LAST_KEY=${KEY}
@@ -1307,24 +1350,27 @@ game-loop() {
     ',')
       if ((P2_RECENTLY_FIRED == 0 && P2_DEAD == 0)); then
         sound player2-laser
-        # Spread shot temporarily fires the 3-lane pattern; the persistent
-        # P2_FIRE_POWER is preserved and resumes when the timer runs out.
-        local P2_FP=${P2_FIRE_POWER}
-        ((P2_SPREAD > 0)) && P2_FP=3
-        case ${P2_FP} in
-          1) P2_LASERS+=("$((P2_X + 4)) $((P2_Y - 1))")
-             ((P2_FIRED++))
-             ;;
-          2) P2_LASERS+=("$((P2_X + 3)) $((P2_Y - 1))")
-             P2_LASERS+=("$((P2_X + 5)) $((P2_Y - 1))")
-             ((P2_FIRED+=2))
-             ;;
-          3) P2_LASERS+=("$((P2_X + 2)) $((P2_Y - 1))")
-             P2_LASERS+=("$((P2_X + 4)) $((P2_Y - 1))")
-             P2_LASERS+=("$((P2_X + 6)) $((P2_Y - 1))")
-             ((P2_FIRED+=3))
-             ;;
-        esac
+        if ((P2_SPREAD > 0)); then
+          P2_LASERS+=("$((P2_X + 4)) $((P2_Y - 1)) 0")
+          P2_LASERS+=("$((P2_X + 2)) $((P2_Y - 1)) -1")
+          P2_LASERS+=("$((P2_X + 6)) $((P2_Y - 1)) 1")
+          ((P2_FIRED+=3))
+        else
+          case ${P2_FIRE_POWER} in
+            1) P2_LASERS+=("$((P2_X + 4)) $((P2_Y - 1))")
+               ((P2_FIRED++))
+               ;;
+            2) P2_LASERS+=("$((P2_X + 3)) $((P2_Y - 1))")
+               P2_LASERS+=("$((P2_X + 5)) $((P2_Y - 1))")
+               ((P2_FIRED+=2))
+               ;;
+            3) P2_LASERS+=("$((P2_X + 2)) $((P2_Y - 1))")
+               P2_LASERS+=("$((P2_X + 4)) $((P2_Y - 1))")
+               P2_LASERS+=("$((P2_X + 6)) $((P2_Y - 1))")
+               ((P2_FIRED+=3))
+               ;;
+          esac
+        fi
         ((P2_RECENTLY_FIRED+=P2_LASER_LATENCY))
       fi
       P2_LAST_KEY=${KEY}
@@ -1408,9 +1454,15 @@ game-loop() {
     fi
   fi
 
-  # Count down the spread-shot timers (same cadence as shields).
-  ((P1_SPREAD > 0)) && ((P1_SPREAD--))
-  ((P2_SPREAD > 0)) && ((P2_SPREAD--))
+  if ((P1_SPREAD > 0)); then
+    ((P1_SPREAD--))
+    ((P1_SPREAD == 0)) && sound switch-off
+  fi
+
+  if ((P2_SPREAD > 0)); then
+    ((P2_SPREAD--))
+    ((P2_SPREAD == 0)) && sound switch-off
+  fi
 
   if ((P1_DEAD == 0)); then
     player-sprite ${P1}
@@ -1465,6 +1517,8 @@ game-loop() {
     draw-right 0 "${blu}${BBLK}" "${P2_SCORE_PADDED} 2UP"
     draw 0 "${SCREEN_HEIGHT}" "${RED}${BBLK}" "LIVES ${P1_LIVES_SYMBOLS}"
     draw-right "${SCREEN_HEIGHT}" "${blu}${BBLK}" "${P2_LIVES_SYMBOLS} LIVES"
+    draw-spread-status ${P1}
+    draw-spread-status ${P2}
   fi
   render
   update-gfx-timers
